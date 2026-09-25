@@ -299,6 +299,16 @@ func (ds *DataStore) loadFromDisk() bool {
 	}
 	if dump.Profile.Name != "" {
 		ds.Profile = dump.Profile
+		fullName := ds.Profile.Name
+		if ds.Profile.Degree != "" && ds.Profile.Degree != "-" {
+			fullName += ", " + ds.Profile.Degree
+		}
+		for i := range ds.Users {
+			if ds.Users[i].Role == "dosen" {
+				ds.Users[i].Name = fullName
+				ds.Users[i].Email = ds.Profile.Email
+			}
+		}
 	}
 	if len(dump.Courses) > 0 {
 		ds.Courses = dump.Courses
@@ -871,6 +881,17 @@ func (ds *DataStore) UpdateProfile(p models.Profile) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.Profile = p
+
+	fullName := p.Name
+	if p.Degree != "" && p.Degree != "-" {
+		fullName += ", " + p.Degree
+	}
+	for i := range ds.Users {
+		if ds.Users[i].Role == "dosen" {
+			ds.Users[i].Name = fullName
+			ds.Users[i].Email = p.Email
+		}
+	}
 	ds.saveToDiskLocked()
 }
 

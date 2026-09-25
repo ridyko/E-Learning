@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { LogIn, ShieldCheck, UserCheck, Key, User, UserPlus, AlertCircle } from 'lucide-vue-next'
+import { showToast, showError } from '../utils/swal.js'
 
 const router = useRouter()
+const route = useRoute()
 
 const activeTab = ref('dosen')
 const username = ref('21099001')
@@ -22,8 +24,6 @@ const setRoleTab = (role) => {
     password.value = '123456'
   }
 }
-
-import { showToast, showError } from '../utils/swal.js'
 
 const handleLogin = async () => {
   if (!username.value || !password.value) {
@@ -59,7 +59,9 @@ const handleLogin = async () => {
 
     showToast(`Selamat datang, ${data.user.name}! 👋`)
 
-    if (data.user.role === 'dosen') {
+    if (route.query.redirect) {
+      router.push(route.query.redirect)
+    } else if (data.user.role === 'dosen') {
       router.push('/admin')
     } else {
       router.push('/')

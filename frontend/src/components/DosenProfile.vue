@@ -37,7 +37,7 @@ defineProps({
       <div class="info-section">
         <div class="header-name">
           <span class="badge badge-gold">DOSEN PENGAMPU ITB SWADHARMA</span>
-          <h2>{{ profile.name }}, {{ profile.degree }}</h2>
+          <h2>{{ profile.name }}{{ (profile.degree && profile.degree.trim() !== '-') ? ', ' + profile.degree : '' }}</h2>
           <p class="title-sub">{{ profile.title }} — {{ profile.department }}</p>
         </div>
 

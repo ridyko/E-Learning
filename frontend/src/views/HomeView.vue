@@ -62,6 +62,18 @@ const fetchDashboardData = async () => {
     if (set && set.hero_title) {
       landingSettings.value = set
     }
+
+    if (currentUser.value && currentUser.value.role === 'dosen' && profile.value) {
+      const degreeStr = (profile.value.degree && profile.value.degree.trim() !== '' && profile.value.degree.trim() !== '-')
+        ? ', ' + profile.value.degree.trim()
+        : ''
+      const fullName = (profile.value.name || '').trim() + degreeStr
+      if (fullName && currentUser.value.name !== fullName) {
+        currentUser.value.name = fullName
+        localStorage.setItem('user', JSON.stringify(currentUser.value))
+        window.dispatchEvent(new Event('auth-changed'))
+      }
+    }
   } catch (err) {
     console.warn('Backend fetch error:', err)
   } finally {

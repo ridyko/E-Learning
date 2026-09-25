@@ -199,14 +199,20 @@ const updateProfileData = async () => {
     })
 
     if (res.ok) {
+      const degreeStr = (profile.value.degree && profile.value.degree.trim() !== '' && profile.value.degree.trim() !== '-')
+        ? ', ' + profile.value.degree.trim()
+        : ''
+      const fullName = (profile.value.name || '').trim() + degreeStr
+
       const stored = localStorage.getItem('user')
       if (stored) {
         try {
           const u = JSON.parse(stored)
-          u.name = profile.value.name + (profile.value.degree ? ', ' + profile.value.degree : '')
+          u.name = fullName
           u.email = profile.value.email
           u.avatar = profile.value.avatar
           localStorage.setItem('user', JSON.stringify(u))
+          currentUser.value = u
           window.dispatchEvent(new Event('auth-changed'))
         } catch (e) {}
       }
