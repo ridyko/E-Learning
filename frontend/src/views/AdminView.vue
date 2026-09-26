@@ -1,7 +1,27 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { showSuccess, showError, showWarning, showConfirm } from '../utils/swal.js'
-import { CheckSquare, Zap } from 'lucide-vue-next'
+import { 
+  CheckSquare, 
+  Zap, 
+  ShieldCheck, 
+  Layout, 
+  CheckCircle2, 
+  Save, 
+  BookOpen, 
+  Layers, 
+  Megaphone, 
+  ClipboardList, 
+  HelpCircle, 
+  Users, 
+  Sparkles, 
+  FolderOpen, 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Edit3,
+  ArrowRight 
+} from 'lucide-vue-next'
 
 const announcements = ref([])
 const assignments = ref([])
@@ -281,6 +301,141 @@ const triggerStartServer = async () => {
       </div>
     </div>
 
+    <!-- PUSAT NAVIGASI & KENDALI UTAMA DOSEN (QUICK ACTION HUB) -->
+    <section class="section-block">
+      <div class="hub-header-title">
+        <h3>⚡ Menu Utama Manajemen Perkuliahan</h3>
+        <p>Akses cepat seluruh modul pengelolaan untuk Dosen Pengampu.</p>
+      </div>
+
+      <div class="quick-hub-grid">
+        <!-- 1. Kelola Matakuliah -->
+        <router-link to="/mata-kuliah" class="glass-card hub-card hub-gold">
+          <div class="hub-icon-box gold-box">
+            <Layers class="hub-icon text-gold" />
+          </div>
+          <div class="hub-content">
+            <h4>Kelola Mata Kuliah & Jadwal</h4>
+            <p>Atur Kode, SKS (4 SKS), Jadwal Perkuliahan, Ruang Kelas, dan Deskripsi Silabus.</p>
+            <span class="hub-action-link">Buka Pengaturan Matkul →</span>
+          </div>
+        </router-link>
+
+        <!-- 2. Kelola Modul / Materi 1-14 -->
+        <router-link :to="courses.length > 0 ? ('/course/' + courses[0].id) : '/mata-kuliah'" class="glass-card hub-card hub-blue">
+          <div class="hub-icon-box blue-box">
+            <BookOpen class="hub-icon text-blue" />
+          </div>
+          <div class="hub-content">
+            <h4>Upload & Kelola Modul (P1 - P14)</h4>
+            <p>Buka/kunci modul mahasiswa, upload file slide PPTX/PDF, video materi, dan deadline tugas.</p>
+            <span class="hub-action-link">Akses Modul Perkuliahan →</span>
+          </div>
+        </router-link>
+
+        <!-- 3. Terbitkan Pengumuman -->
+        <router-link to="/pengumuman" class="glass-card hub-card hub-amber">
+          <div class="hub-icon-box amber-box">
+            <Megaphone class="hub-icon text-amber" />
+          </div>
+          <div class="hub-content">
+            <h4>Terbitkan & Kelola Pengumuman</h4>
+            <p>Buat pengumuman penting, info tugas, info kuis, atau hapus pengumuman lama.</p>
+            <span class="hub-action-link">Kelola Pengumuman →</span>
+          </div>
+        </router-link>
+
+        <!-- 4. Presensi Perkuliahan -->
+        <router-link to="/presensi" class="glass-card hub-card hub-emerald">
+          <div class="hub-icon-box emerald-box">
+            <ClipboardList class="hub-icon text-emerald" />
+          </div>
+          <div class="hub-content">
+            <h4>Presensi & Absensi Digital</h4>
+            <p>Tampilkan QR code presensi ke layar kelas, rekap hadir, sakit, atau izin mahasiswa.</p>
+            <span class="hub-action-link">Buka Sesi Presensi →</span>
+          </div>
+        </router-link>
+
+        <!-- 5. Bank Soal & Kuis -->
+        <router-link to="/bank-soal" class="glass-card hub-card hub-purple">
+          <div class="hub-icon-box purple-box">
+            <HelpCircle class="hub-icon text-purple" />
+          </div>
+          <div class="hub-content">
+            <h4>Bank Soal & Rekap Nilai Kuis</h4>
+            <p>Kelola bank soal ujian, atur live quiz proyektor, dan ekspor nilai mahasiswa.</p>
+            <span class="hub-action-link">Kelola Bank Soal →</span>
+          </div>
+        </router-link>
+
+        <!-- 6. Data Mahasiswa -->
+        <router-link to="/mahasiswa" class="glass-card hub-card hub-indigo">
+          <div class="hub-icon-box indigo-box">
+            <Users class="hub-icon text-indigo" />
+          </div>
+          <div class="hub-content">
+            <h4>Daftar Mahasiswa Terdaftar</h4>
+            <p>Pantau mahasiswa yang sudah mendaftar NIM mandiri dan status akunnya.</p>
+            <span class="hub-action-link">Lihat Semua Mahasiswa →</span>
+          </div>
+        </router-link>
+      </div>
+    </section>
+
+    <!-- RINGKASAN MATA KULIAH AKTIF -->
+    <section class="section-block">
+      <div class="glass-card admin-card">
+        <div class="card-title-row-between">
+          <div class="card-title-row">
+            <BookOpen class="title-icon text-gold" />
+            <div>
+              <h3>📚 Status Mata Kuliah Semester Ini</h3>
+              <p class="card-sub">Mata kuliah yang aktif dapat diakses mahasiswa untuk mengunduh modul dan kuis.</p>
+            </div>
+          </div>
+          <router-link to="/mata-kuliah" class="btn btn-secondary btn-sm">
+            <Edit3 class="btn-icon-xs" />
+            <span>Kelola Lengkap di Menu Matkul</span>
+          </router-link>
+        </div>
+
+        <div class="courses-summary-grid">
+          <div v-for="c in courses" :key="c.id" class="course-summary-card">
+            <div class="summary-top">
+              <span class="badge badge-gold">{{ c.code }}</span>
+              <span class="badge badge-blue">{{ c.sks }} SKS</span>
+              <span :class="c.status === 'Non Aktif' ? 'badge badge-rose' : 'badge badge-emerald'">
+                {{ c.status || 'Aktif' }}
+              </span>
+            </div>
+            <h4 class="summary-title">{{ c.name }}</h4>
+            <p class="summary-desc">{{ c.description }}</p>
+            <div class="summary-meta">
+              <div class="meta-line">
+                <Clock class="meta-icon text-blue" />
+                <span>{{ c.class_time }}</span>
+              </div>
+              <div class="meta-line">
+                <MapPin class="meta-icon text-emerald" />
+                <span>{{ c.room }}</span>
+              </div>
+            </div>
+            <div class="summary-actions">
+              <router-link :to="'/course/' + c.id" class="btn btn-primary btn-sm">
+                <FolderOpen class="btn-icon-xs" />
+                <span>Buka Modul (1 - 14)</span>
+              </router-link>
+              <router-link to="/mata-kuliah" class="btn btn-secondary btn-sm">
+                <Edit3 class="btn-icon-xs" />
+                <span>Edit Detail</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Edit Beranda Settings Card -->
     <section class="section-block">
       <div class="glass-card admin-card edit-beranda-card">
@@ -433,6 +588,184 @@ const triggerStartServer = async () => {
   max-width: 1350px;
   margin: 0 auto;
   padding: 1.5rem;
+}
+
+.hub-header-title {
+  margin-bottom: 1.25rem;
+}
+
+.hub-header-title h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+}
+
+.hub-header-title p {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.quick-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.hub-card {
+  display: flex;
+  gap: 1.2rem;
+  padding: 1.5rem;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hub-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.1);
+  border-color: #cbd5e1;
+}
+
+.hub-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hub-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.gold-box { background: #fef3c7; }
+.blue-box { background: #dbeafe; }
+.amber-box { background: #fef3c7; }
+.emerald-box { background: #d1fae5; }
+.purple-box { background: #ede9fe; }
+.indigo-box { background: #e0e7ff; }
+
+.text-gold { color: #d97706; }
+.text-blue { color: #2563eb; }
+.text-amber { color: #b45309; }
+.text-emerald { color: #059669; }
+.text-purple { color: #7c3aed; }
+.text-indigo { color: #4f46e5; }
+
+.hub-content h4 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+}
+
+.hub-content p {
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.45;
+  margin-bottom: 0.75rem;
+}
+
+.hub-action-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hub-card:hover .hub-action-link {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.card-title-row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.courses-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.course-summary-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.summary-top {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.summary-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.summary-desc {
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.summary-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  padding: 0.5rem 0;
+  border-top: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.meta-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
 }
 
 .page-header {

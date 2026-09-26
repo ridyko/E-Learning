@@ -545,7 +545,7 @@ const exitQuiz = async () => {
             <Radio class="logo-icon text-white animate-pulse" />
           </div>
           <h2>Panel Peluncur Live Quiz Interaktif (Dosen)</h2>
-          <p>Pak <strong>Rio Widyatmoko, S.Kom, M.M.S.I</strong> — Silakan tentukan mode input soal untuk ditampilkan pada layar proyektor perkuliahan.</p>
+          <p>Pak <strong>Rio Widyatmoko</strong> — Silakan tentukan mode input soal untuk ditampilkan pada layar proyektor perkuliahan.</p>
         </div>
 
         <!-- Dosen Setup Mode Tabs -->

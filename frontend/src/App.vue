@@ -36,7 +36,7 @@ onMounted(() => {
       <div class="footer-container">
         <div class="footer-brand">
           <h4>Institut Teknologi dan Bisnis Swadharma</h4>
-          <p>Portal E-Learning Resmi Pengampu Dosen: <strong>Rio Widyatmoko, S.Kom, M.M.S.I</strong></p>
+          <p>Portal E-Learning Resmi Pengampu: <strong>Rio Widyatmoko</strong></p>
           <p class="courses-tag">Mata Kuliah: <span>Rekayasa Perangkat Lunak</span> & <span>Pemrograman Web</span></p>
         </div>
         <div class="footer-copy">

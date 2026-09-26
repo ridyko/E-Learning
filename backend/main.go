@@ -37,6 +37,7 @@ func main() {
 	http.HandleFunc("/api/quizzes/questions", handlers.EnableCORS(handlers.AddQuizQuestion))
 	http.HandleFunc("/api/assignments", handlers.EnableCORS(handlers.HandleAssignments))
 	http.HandleFunc("/api/attendance", handlers.EnableCORS(handlers.HandleAttendance))
+	http.HandleFunc("/api/upload", handlers.EnableCORS(handlers.UploadHandler))
 
 	// Live Quiz Interaktif routes
 	http.HandleFunc("/api/live-quiz/create", handlers.EnableCORS(handlers.CreateLiveQuizSession))

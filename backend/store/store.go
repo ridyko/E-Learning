@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -1140,8 +1141,11 @@ func (ds *DataStore) Authenticate(username, password string) (models.User, error
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
+	cleanUsername := strings.TrimSpace(username)
+	cleanPassword := strings.TrimSpace(password)
+
 	for _, u := range ds.Users {
-		if u.Username == username && u.Password == password {
+		if strings.EqualFold(strings.TrimSpace(u.Username), cleanUsername) && strings.TrimSpace(u.Password) == cleanPassword {
 			return u, nil
 		}
 	}
@@ -1152,8 +1156,12 @@ func (ds *DataStore) RegisterStudent(u models.User) (models.User, error) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 
+	u.Username = strings.TrimSpace(u.Username)
+	u.Name = strings.TrimSpace(u.Name)
+	u.Password = strings.TrimSpace(u.Password)
+
 	for _, existing := range ds.Users {
-		if existing.Username == u.Username {
+		if strings.EqualFold(strings.TrimSpace(existing.Username), u.Username) {
 			return models.User{}, errors.New("NIM tersebut sudah terdaftar! Silakan login.")
 		}
 	}

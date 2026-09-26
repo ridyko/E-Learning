@@ -64,6 +64,24 @@ const visibleAllCourses = computed(() => {
   return allCourses.value.filter(c => c.status !== 'Non Aktif')
 })
 
+const profile = ref(null)
+const fetchProfile = async () => {
+  try {
+    const res = await fetch('/api/profile')
+    if (res.ok) {
+      profile.value = await res.json()
+    }
+  } catch {}
+}
+
+const dosenDisplayName = computed(() => {
+  if (!profile.value) return 'Rio Widyatmoko'
+  const deg = (profile.value.degree && profile.value.degree.trim() !== '' && profile.value.degree.trim() !== '-')
+    ? ', ' + profile.value.degree.trim()
+    : ''
+  return (profile.value.name || 'Rio Widyatmoko').trim() + deg
+})
+
 // Assignment state
 const assignments = ref([])
 const showAssignmentModal = ref(false)
@@ -155,6 +173,7 @@ onMounted(() => {
   fetchAssignments()
   fetchAllCourses()
   fetchStudentsCount()
+  fetchProfile()
   window.addEventListener('course-changed', fetchAllCourses)
 })
 
@@ -359,20 +378,59 @@ const openEditModuleModal = (mod) => {
   showEditModuleModal.value = true
 }
 
-// Simulated File Pickers for Slide & PDF
-const handleSlideFileSim = (e) => {
+// Real File Uploaders for Slide & PDF
+const isUploadingSlide = ref(false)
+const isUploadingPdf = ref(false)
+
+const handleSlideFile = async (e) => {
   const file = e.target.files[0]
-  if (file) {
-    editModuleForm.value.slide_url = `/uploads/slides/${file.name}`
-    showSuccess('File Slide Dipilih 📄', `Slide "${file.name}" siap diunggah.`)
+  if (!file) return
+  isUploadingSlide.value = true
+  showSuccess('Mengunggah Slide... ⏳', `Sedang mengunggah file "${file.name}" ke server...`)
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (res.ok && data.url) {
+      editModuleForm.value.slide_url = data.url
+      showSuccess('Slide Berhasil Diunggah! 📄', `File slide tersimpan di server.`)
+    } else {
+      showError('Gagal Upload', data.error || 'Gagal mengunggah slide')
+    }
+  } catch (err) {
+    showError('Gagal Upload', 'Terjadi kesalahan koneksi saat upload.')
+  } finally {
+    isUploadingSlide.value = false
   }
 }
 
-const handlePdfFileSim = (e) => {
+const handlePdfFile = async (e) => {
   const file = e.target.files[0]
-  if (file) {
-    editModuleForm.value.pdf_url = `/uploads/modul/${file.name}`
-    showSuccess('File Modul PDF Dipilih 📄', `Modul PDF "${file.name}" siap diunggah.`)
+  if (!file) return
+  isUploadingPdf.value = true
+  showSuccess('Mengunggah Modul PDF... ⏳', `Sedang mengunggah file "${file.name}" ke server...`)
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (res.ok && data.url) {
+      editModuleForm.value.pdf_url = data.url
+      showSuccess('Modul PDF Berhasil Diunggah! 📄', `File modul tersimpan di server.`)
+    } else {
+      showError('Gagal Upload', data.error || 'Gagal mengunggah modul PDF')
+    }
+  } catch (err) {
+    showError('Gagal Upload', 'Terjadi kesalahan koneksi saat upload.')
+  } finally {
+    isUploadingPdf.value = false
   }
 }
 
@@ -517,7 +575,7 @@ const submitAssignment = async () => {
         <span :class="course.status === 'Non Aktif' ? 'badge badge-rose' : 'badge badge-emerald'">
           Status: {{ course.status || 'Aktif' }}
         </span>
-        <span class="badge badge-emerald">Dosen: Rio Widyatmoko, S.Kom, M.M.S.I</span>
+        <span class="badge badge-emerald">Dosen: {{ dosenDisplayName }}</span>
       </div>
       <h2>{{ course.name }}</h2>
       <p class="header-desc">{{ course.description }}</p>
@@ -686,17 +744,43 @@ const submitAssignment = async () => {
 
             <!-- Material Download Resources -->
             <div class="resources-row">
-              <a href="#" @click.prevent="showSuccess('Download Slide', 'Mengunduh Slide Presentation Pertemuan ' + mod.meeting_number)" class="btn btn-secondary">
-                <FileText class="btn-icon-xs" />
-                Download Slide Presentation
-              </a>
-              <a href="#" @click.prevent="showSuccess('Download Modul', 'Mengunduh Modul PDF Pertemuan ' + mod.meeting_number)" class="btn btn-secondary">
-                <Download class="btn-icon-xs" />
-                Download Modul PDF
-              </a>
-              <a v-if="mod.video_url" :href="mod.video_url" target="_blank" class="btn btn-secondary">
-                <Video class="btn-icon-xs" />
-                Tonton Video Tutorial
+              <template v-if="mod.slide_url && mod.slide_url !== '#'">
+                <a :href="mod.slide_url" target="_blank" class="btn btn-secondary" title="Download / Buka Slide Presentation">
+                  <FileText class="btn-icon-xs text-gold" />
+                  <span>Download Slide Presentation</span>
+                </a>
+              </template>
+              <template v-else>
+                <button v-if="isDosen" @click="openEditModuleModal(mod)" class="btn btn-secondary btn-dashed" title="Klik untuk mengunggah materi slide">
+                  <PlusCircle class="btn-icon-xs text-gold" />
+                  <span>+ Pasang Slide Presentasi</span>
+                </button>
+                <span v-else class="resource-pending-pill">
+                  <FileText class="pill-icon text-muted" />
+                  <span>Slide belum diunggah Dosen</span>
+                </span>
+              </template>
+
+              <template v-if="mod.pdf_url && mod.pdf_url !== '#'">
+                <a :href="mod.pdf_url" target="_blank" class="btn btn-secondary" title="Download / Buka Modul PDF">
+                  <Download class="btn-icon-xs text-blue" />
+                  <span>Download Modul PDF</span>
+                </a>
+              </template>
+              <template v-else>
+                <button v-if="isDosen" @click="openEditModuleModal(mod)" class="btn btn-secondary btn-dashed" title="Klik untuk mengunggah modul praktikum">
+                  <PlusCircle class="btn-icon-xs text-blue" />
+                  <span>+ Pasang Modul PDF</span>
+                </button>
+                <span v-else class="resource-pending-pill">
+                  <Download class="pill-icon text-muted" />
+                  <span>Modul PDF belum diunggah Dosen</span>
+                </span>
+              </template>
+
+              <a v-if="mod.video_url && mod.video_url.trim() !== ''" :href="mod.video_url" target="_blank" class="btn btn-secondary">
+                <Video class="btn-icon-xs text-rose" />
+                <span>Tonton Video Tutorial</span>
               </a>
             </div>
 
@@ -870,10 +954,10 @@ const submitAssignment = async () => {
               <div class="form-group">
                 <label class="input-label">Upload / Link Slide Presentation (PDF/PPTX)</label>
                 <div class="upload-input-group">
-                  <input v-model="editModuleForm.slide_url" class="glass-input" placeholder="https://drive.google.com/file/slide.pdf atau nama file" />
-                  <label class="btn-upload-file">
-                    <FileUp class="up-icon" /> Pilih File
-                    <input type="file" @change="handleSlideFileSim" hidden accept=".pdf,.pptx,.ppt" />
+                  <input v-model="editModuleForm.slide_url" class="glass-input" placeholder="https://drive.google.com/... atau pilih file untuk upload" />
+                  <label class="btn-upload-file" :class="{ 'btn-uploading': isUploadingSlide }">
+                    <FileUp class="up-icon" /> {{ isUploadingSlide ? 'Mengunggah...' : 'Pilih & Upload File' }}
+                    <input type="file" @change="handleSlideFile" :disabled="isUploadingSlide" hidden accept=".pdf,.pptx,.ppt,.zip" />
                   </label>
                 </div>
               </div>
@@ -881,10 +965,10 @@ const submitAssignment = async () => {
               <div class="form-group">
                 <label class="input-label">Upload / Link Modul PDF Praktikum</label>
                 <div class="upload-input-group">
-                  <input v-model="editModuleForm.pdf_url" class="glass-input" placeholder="https://drive.google.com/file/modul.pdf" />
-                  <label class="btn-upload-file">
-                    <FileUp class="up-icon" /> Pilih File
-                    <input type="file" @change="handlePdfFileSim" hidden accept=".pdf" />
+                  <input v-model="editModuleForm.pdf_url" class="glass-input" placeholder="https://drive.google.com/... atau pilih file untuk upload" />
+                  <label class="btn-upload-file" :class="{ 'btn-uploading': isUploadingPdf }">
+                    <FileUp class="up-icon" /> {{ isUploadingPdf ? 'Mengunggah...' : 'Pilih & Upload File' }}
+                    <input type="file" @change="handlePdfFile" :disabled="isUploadingPdf" hidden accept=".pdf,.doc,.docx" />
                   </label>
                 </div>
               </div>
@@ -2173,5 +2257,35 @@ const submitAssignment = async () => {
 }
 .btn-blue:hover {
   background: #1e40af;
+}
+
+.btn-dashed {
+  border: 1.5px dashed #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.85rem;
+}
+.btn-dashed:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.btn-uploading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.resource-pending-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
 }
 </style>

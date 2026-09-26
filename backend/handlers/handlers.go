@@ -3,8 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"elearning-backend/models"
 	"elearning-backend/store"
@@ -668,5 +672,84 @@ func GetActiveLiveQuizSession(w http.ResponseWriter, r *http.Request) {
 		"session": session,
 	})
 }
+
+// UploadHandler handles file uploads for slides, modules, and assignment attachments
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	// Limit 50 MB
+	err := r.ParseMultipartForm(50 << 20)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Ukuran file terlalu besar (Maks 50MB)"})
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "File tidak ditemukan dalam form request"})
+		return
+	}
+	defer file.Close()
+
+	targetDirs := []string{
+		"/home/questkom/elarning.questkomapp.com/uploads",
+		"../frontend/dist/uploads",
+		"frontend/dist/uploads",
+		"uploads",
+	}
+
+	var saveDir string
+	for _, dir := range targetDirs {
+		if _, err := os.Stat(dir); err == nil {
+			saveDir = dir
+			break
+		}
+	}
+	if saveDir == "" {
+		saveDir = targetDirs[0]
+		_ = os.MkdirAll(saveDir, 0755)
+	}
+
+	safeName := strings.ReplaceAll(header.Filename, " ", "_")
+	safeName = strings.ReplaceAll(safeName, "/", "_")
+	safeName = strings.ReplaceAll(safeName, "\\", "_")
+	finalFileName := fmt.Sprintf("%d_%s", time.Now().Unix(), safeName)
+	dstPath := filepath.Join(saveDir, finalFileName)
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		_ = os.MkdirAll("uploads", 0755)
+		dstPath = filepath.Join("uploads", finalFileName)
+		dst, err = os.Create(dstPath)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Gagal menyimpan file ke disk"})
+			return
+		}
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal menulis file"})
+		return
+	}
+
+	fileURL := "/uploads/" + finalFileName
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":   "success",
+		"message":  "File berhasil diunggah!",
+		"url":      fileURL,
+		"filename": header.Filename,
+		"size":     header.Size,
+	})
+}
+
 
 
