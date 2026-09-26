@@ -387,6 +387,11 @@ const submitStudentCheckIn = async () => {
 
 // Mahasiswa Personal Presensi Helpers
 const getMeetingTopic = (courseId, mNo) => {
+  const status = getStudentMeetingStatus(mNo)
+  if (status === 'Belum Mulai' || status === 'Non Aktif') {
+    return '—'
+  }
+
   if (courseId === 'rpl-2026') {
     const topics = [
       'Pengantar Rekayasa Perangkat Lunak', 'Model Proses SDLC (Waterfall & Agile)',
@@ -695,7 +700,14 @@ const openIzinModal = async () => {
                 </td>
                 <td>
                   <div class="topic-info">
-                    <span class="topic-title">Pertemuan {{ m }}: {{ getMeetingTopic(selectedCourse, m) }}</span>
+                    <span class="topic-title">
+                      <template v-if="getMeetingTopic(selectedCourse, m) !== '—'">
+                        Pertemuan {{ m }}: {{ getMeetingTopic(selectedCourse, m) }}
+                      </template>
+                      <template v-else>
+                        Pertemuan {{ m }}: <span style="color: #94a3b8; font-weight: 500; font-style: italic;">— (Belum Dimulai)</span>
+                      </template>
+                    </span>
                     <span class="topic-date">📅 {{ getMeetingDate(m) }}</span>
                   </div>
                 </td>

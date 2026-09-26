@@ -268,10 +268,11 @@ func HandleCourses(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(map[string]string{"error": "Mata Kuliah tidak ditemukan"})
 			return
 		}
+		updatedCourse, _ := store.DB.GetCourseByID(c.ID)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"status":  "success",
-			"message": "Mata Kuliah '" + c.Name + "' berhasil diperbarui!",
-			"course":  c,
+			"message": "Mata Kuliah '" + updatedCourse.Name + "' berhasil diperbarui!",
+			"course":  updatedCourse,
 		})
 
 	case "DELETE":

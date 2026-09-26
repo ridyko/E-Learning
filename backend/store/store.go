@@ -321,31 +321,264 @@ func InitStore() {
 		}
 	}
 
+	dsnCandidates := []string{}
 	if dsn != "" {
-		fmt.Printf("[DataStore] Attempting MySQL connection with DSN: %s...\n", dsn)
-		db, err := sql.Open("mysql", dsn)
-		if err != nil {
-			fmt.Printf("[DataStore] MySQL open error: %v (falling back to JSON storage)\n", err)
-		} else {
-			if pingErr := db.Ping(); pingErr != nil {
-				fmt.Printf("[DataStore] MySQL ping error: %v (falling back to JSON storage)\n", pingErr)
-			} else {
+		dsnCandidates = append(dsnCandidates, dsn)
+	}
+	dsnCandidates = append(dsnCandidates,
+		"root:@tcp(127.0.0.1:3306)/questkom_elearning?parseTime=true",
+		"root:@tcp(127.0.0.1:3306)/elearning?parseTime=true",
+		"root:root@tcp(127.0.0.1:3306)/elearning?parseTime=true",
+	)
+
+	for _, cand := range dsnCandidates {
+		fmt.Printf("[DataStore] Attempting MySQL connection with DSN: %s...\n", cand)
+		db, err := sql.Open("mysql", cand)
+		if err == nil {
+			if pingErr := db.Ping(); pingErr == nil {
 				DB.SQLDB = db
-				fmt.Println("[DataStore] Connected to MySQL Database successfully! 🐬")
+				fmt.Printf("[DataStore] Connected to MySQL Database successfully! (%s) 🐬\n", cand)
+				break
+			} else {
+				db.Close()
 			}
 		}
 	}
 
 	if DB.SQLDB != nil {
+		DB.initTablesMySQL()
+		DB.seedMySQLIfEmpty()
 		DB.loadFromMySQL()
-		fmt.Println("[DataStore] Loaded state from cPanel MySQL Database (questkom_elearning)")
-	} else if DB.loadFromDisk() {
-		fmt.Println("[DataStore] Loaded persisted database state from data/store.json")
+		fmt.Println("[DataStore] Database sync completed successfully!")
 	} else {
-		DB.mu.Lock()
-		DB.saveToDiskLocked()
-		DB.mu.Unlock()
-		fmt.Println("[DataStore] Initialized default database state and saved to data/store.json")
+		if DB.loadFromDisk() {
+			fmt.Println("[DataStore] Loaded persisted database state from data/store.json")
+		} else {
+			DB.mu.Lock()
+			DB.saveToDiskLocked()
+			DB.mu.Unlock()
+			fmt.Println("[DataStore] Initialized default database state and saved to data/store.json")
+		}
+	}
+}
+
+func (ds *DataStore) initTablesMySQL() {
+	if ds.SQLDB == nil {
+		return
+	}
+
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS users (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			username VARCHAR(50) NOT NULL UNIQUE,
+			name VARCHAR(100) NOT NULL,
+			role VARCHAR(20) NOT NULL DEFAULT 'mahasiswa',
+			password VARCHAR(255) NOT NULL,
+			email VARCHAR(100) DEFAULT NULL,
+			prodi VARCHAR(100) DEFAULT NULL,
+			phone VARCHAR(50) DEFAULT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS landing_settings (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			hero_title TEXT NOT NULL,
+			hero_subtitle TEXT NOT NULL,
+			institution_badge VARCHAR(100) DEFAULT NULL,
+			semester_badge VARCHAR(100) DEFAULT NULL,
+			dosen_bio TEXT DEFAULT NULL,
+			office_hours VARCHAR(100) DEFAULT NULL,
+			room VARCHAR(100) DEFAULT NULL,
+			phone VARCHAR(50) DEFAULT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS profiles (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			name VARCHAR(100) NOT NULL,
+			degree VARCHAR(50) DEFAULT NULL,
+			title VARCHAR(100) DEFAULT NULL,
+			nidn VARCHAR(50) DEFAULT NULL,
+			institution VARCHAR(150) DEFAULT NULL,
+			faculty VARCHAR(100) DEFAULT NULL,
+			department VARCHAR(100) DEFAULT NULL,
+			email VARCHAR(100) DEFAULT NULL,
+			phone VARCHAR(50) DEFAULT NULL,
+			office_hours VARCHAR(100) DEFAULT NULL,
+			room VARCHAR(100) DEFAULT NULL,
+			avatar TEXT DEFAULT NULL,
+			bio TEXT DEFAULT NULL,
+			expertise_areas TEXT DEFAULT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS courses (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			code VARCHAR(20) NOT NULL,
+			name VARCHAR(100) NOT NULL,
+			sks INT NOT NULL DEFAULT 3,
+			semester VARCHAR(50) DEFAULT NULL,
+			class_time VARCHAR(100) DEFAULT NULL,
+			room VARCHAR(100) DEFAULT NULL,
+			total_students INT NOT NULL DEFAULT 0,
+			status VARCHAR(50) NOT NULL DEFAULT 'Aktif',
+			description TEXT DEFAULT NULL,
+			syllabus LONGTEXT DEFAULT NULL,
+			modules LONGTEXT DEFAULT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS announcements (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			title VARCHAR(255) NOT NULL,
+			category VARCHAR(50) NOT NULL DEFAULT 'Penting',
+			course_id VARCHAR(50) NOT NULL DEFAULT 'all',
+			content TEXT NOT NULL,
+			author VARCHAR(100) DEFAULT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS quizzes (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			course_id VARCHAR(50) NOT NULL,
+			title VARCHAR(255) NOT NULL,
+			description TEXT DEFAULT NULL,
+			time_limit INT NOT NULL DEFAULT 15,
+			questions LONGTEXT DEFAULT NULL
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS quiz_submissions (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			quiz_id VARCHAR(50) NOT NULL,
+			student_nim VARCHAR(50) NOT NULL,
+			student_name VARCHAR(100) NOT NULL,
+			answers LONGTEXT DEFAULT NULL,
+			essay_answers LONGTEXT DEFAULT NULL,
+			score DOUBLE NOT NULL DEFAULT 0,
+			total_score DOUBLE NOT NULL DEFAULT 100,
+			submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS assignments (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			course_id VARCHAR(50) NOT NULL,
+			meeting_no INT NOT NULL,
+			title VARCHAR(255) NOT NULL,
+			description TEXT DEFAULT NULL,
+			due_date VARCHAR(50) DEFAULT NULL,
+			student_nim VARCHAR(50) NOT NULL,
+			student_name VARCHAR(100) NOT NULL,
+			repo_link TEXT DEFAULT NULL,
+			notes TEXT DEFAULT NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'Submitted',
+			grade VARCHAR(50) DEFAULT NULL,
+			submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+		`CREATE TABLE IF NOT EXISTS attendances (
+			id VARCHAR(50) NOT NULL PRIMARY KEY,
+			course_id VARCHAR(50) NOT NULL,
+			meeting_no INT NOT NULL,
+			student_nim VARCHAR(50) NOT NULL,
+			student_name VARCHAR(100) NOT NULL,
+			status VARCHAR(50) NOT NULL DEFAULT 'Hadir',
+			check_in_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+	}
+
+	for _, q := range queries {
+		if _, err := ds.SQLDB.Exec(q); err != nil {
+			fmt.Printf("[DataStore] DDL table creation notice: %v\n", err)
+		}
+	}
+}
+
+func (ds *DataStore) seedMySQLIfEmpty() {
+	if ds.SQLDB == nil {
+		return
+	}
+
+	// 1. Users
+	var userCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
+	if userCount == 0 && len(ds.Users) > 0 {
+		for _, u := range ds.Users {
+			ds.saveUserMySQL(u)
+		}
+		fmt.Println("[DataStore] Seeded default users into MySQL")
+	}
+
+	// 2. Landing Settings
+	var landingCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM landing_settings").Scan(&landingCount)
+	if landingCount == 0 {
+		ds.saveLandingSettingsMySQL(ds.LandingSettings)
+		fmt.Println("[DataStore] Seeded landing settings into MySQL")
+	}
+
+	// 3. Profile
+	var profileCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM profiles").Scan(&profileCount)
+	if profileCount == 0 {
+		ds.saveProfileMySQL(ds.Profile)
+		fmt.Println("[DataStore] Seeded profile into MySQL")
+	}
+
+	// 4. Courses
+	var courseCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM courses").Scan(&courseCount)
+	if courseCount == 0 && len(ds.Courses) > 0 {
+		for _, c := range ds.Courses {
+			ds.saveCourseMySQL(c)
+		}
+		fmt.Println("[DataStore] Seeded courses into MySQL")
+	}
+
+	// 5. Announcements
+	var annCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM announcements").Scan(&annCount)
+	if annCount == 0 && len(ds.Announcements) > 0 {
+		for _, a := range ds.Announcements {
+			ds.saveAnnouncementMySQL(a)
+		}
+		fmt.Println("[DataStore] Seeded announcements into MySQL")
+	}
+
+	// 6. Quizzes
+	var quizCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM quizzes").Scan(&quizCount)
+	if quizCount == 0 && len(ds.Quizzes) > 0 {
+		for _, q := range ds.Quizzes {
+			ds.saveQuizMySQL(q)
+		}
+		fmt.Println("[DataStore] Seeded quizzes into MySQL")
+	}
+
+	// 7. Quiz Submissions
+	var subCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM quiz_submissions").Scan(&subCount)
+	if subCount == 0 && len(ds.Submissions) > 0 {
+		for _, sub := range ds.Submissions {
+			ds.saveSubmissionMySQL(sub)
+		}
+		fmt.Println("[DataStore] Seeded quiz submissions into MySQL")
+	}
+
+	// 8. Assignments
+	var asgCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM assignments").Scan(&asgCount)
+	if asgCount == 0 && len(ds.Assignments) > 0 {
+		for _, asg := range ds.Assignments {
+			ds.saveAssignmentMySQL(asg)
+		}
+		fmt.Println("[DataStore] Seeded assignments into MySQL")
+	}
+
+	// 9. Attendances
+	var attCount int
+	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM attendances").Scan(&attCount)
+	if attCount == 0 && len(ds.Attendances) > 0 {
+		for _, att := range ds.Attendances {
+			ds.saveAttendanceMySQL(att)
+		}
+		fmt.Println("[DataStore] Seeded attendances into MySQL")
 	}
 }
 
@@ -353,22 +586,402 @@ func (ds *DataStore) loadFromMySQL() {
 	if ds.SQLDB == nil {
 		return
 	}
-	// Load users from MySQL
-	rows, err := ds.SQLDB.Query("SELECT id, username, name, role, password, email, prodi FROM users")
+
+	// 1. Users
+	rowsU, err := ds.SQLDB.Query("SELECT id, username, name, role, password, email, prodi, phone, created_at FROM users")
 	if err == nil {
-		var loadedUsers []models.User
-		for rows.Next() {
+		var loaded []models.User
+		for rowsU.Next() {
 			var u models.User
-			var email, prodi sql.NullString
-			_ = rows.Scan(&u.ID, &u.Username, &u.Name, &u.Role, &u.Password, &email, &prodi)
+			var email, prodi, phone sql.NullString
+			var createdAt time.Time
+			_ = rowsU.Scan(&u.ID, &u.Username, &u.Name, &u.Role, &u.Password, &email, &prodi, &phone, &createdAt)
 			u.Email = email.String
 			u.Prodi = prodi.String
-			loadedUsers = append(loadedUsers, u)
+			u.Phone = phone.String
+			if !createdAt.IsZero() {
+				u.CreatedAt = createdAt
+			}
+			loaded = append(loaded, u)
 		}
-		rows.Close()
-		if len(loadedUsers) > 0 {
-			ds.Users = loadedUsers
+		rowsU.Close()
+		if len(loaded) > 0 {
+			ds.Users = loaded
 		}
+	}
+
+	// 2. Landing Settings
+	rowL := ds.SQLDB.QueryRow("SELECT hero_title, hero_subtitle, institution_badge, semester_badge, dosen_bio, office_hours, room, phone FROM landing_settings LIMIT 1")
+	var ls models.LandingSettings
+	var ib, sb, db, oh, rm, ph sql.NullString
+	if err := rowL.Scan(&ls.HeroTitle, &ls.HeroSubtitle, &ib, &sb, &db, &oh, &rm, &ph); err == nil {
+		ls.InstitutionBadge = ib.String
+		ls.SemesterBadge = sb.String
+		ls.DosenBio = db.String
+		ls.OfficeHours = oh.String
+		ls.Room = rm.String
+		ls.Phone = ph.String
+		if ls.HeroTitle != "" {
+			ds.LandingSettings = ls
+		}
+	}
+
+	// 3. Profiles
+	rowP := ds.SQLDB.QueryRow("SELECT name, degree, title, nidn, institution, faculty, department, email, phone, office_hours, room, avatar, bio, expertise_areas FROM profiles LIMIT 1")
+	var p models.Profile
+	var deg, tit, nidn, inst, fac, dep, em, ph2, oh2, rm2, av, bio, expStr sql.NullString
+	if err := rowP.Scan(&p.Name, &deg, &tit, &nidn, &inst, &fac, &dep, &em, &ph2, &oh2, &rm2, &av, &bio, &expStr); err == nil {
+		p.Degree = deg.String
+		p.Title = tit.String
+		p.NIDN = nidn.String
+		p.Institution = inst.String
+		p.Faculty = fac.String
+		p.Department = dep.String
+		p.Email = em.String
+		p.Phone = ph2.String
+		p.OfficeHours = oh2.String
+		p.Room = rm2.String
+		p.Avatar = av.String
+		p.Bio = bio.String
+		if expStr.Valid && expStr.String != "" {
+			_ = json.Unmarshal([]byte(expStr.String), &p.ExpertiseAreas)
+		}
+		if p.Name != "" {
+			ds.Profile = p
+		}
+	}
+
+	// 4. Courses
+	rowsC, err := ds.SQLDB.Query("SELECT id, code, name, sks, semester, class_time, room, total_students, status, description, syllabus, modules FROM courses")
+	if err == nil {
+		var loaded []models.Course
+		for rowsC.Next() {
+			var c models.Course
+			var sem, ct, rm3, st, desc, sylStr, modStr sql.NullString
+			_ = rowsC.Scan(&c.ID, &c.Code, &c.Name, &c.SKS, &sem, &ct, &rm3, &c.TotalStudents, &st, &desc, &sylStr, &modStr)
+			c.Semester = sem.String
+			c.ClassTime = ct.String
+			c.Room = rm3.String
+			c.Status = st.String
+			if c.Status == "" {
+				c.Status = "Aktif"
+			}
+			c.Description = desc.String
+			if sylStr.Valid && sylStr.String != "" {
+				_ = json.Unmarshal([]byte(sylStr.String), &c.Syllabus)
+			}
+			if modStr.Valid && modStr.String != "" {
+				_ = json.Unmarshal([]byte(modStr.String), &c.Modules)
+			}
+			loaded = append(loaded, c)
+		}
+		rowsC.Close()
+		if len(loaded) > 0 {
+			ds.Courses = loaded
+		}
+	}
+
+	// 5. Announcements
+	rowsA, err := ds.SQLDB.Query("SELECT id, title, category, course_id, content, author, created_at FROM announcements ORDER BY created_at DESC")
+	if err == nil {
+		var loaded []models.Announcement
+		for rowsA.Next() {
+			var a models.Announcement
+			var author sql.NullString
+			var createdAt time.Time
+			_ = rowsA.Scan(&a.ID, &a.Title, &a.Category, &a.CourseID, &a.Content, &author, &createdAt)
+			a.Author = author.String
+			if !createdAt.IsZero() {
+				a.CreatedAt = createdAt
+			}
+			loaded = append(loaded, a)
+		}
+		rowsA.Close()
+		if len(loaded) > 0 {
+			ds.Announcements = loaded
+		}
+	}
+
+	// 6. Quizzes
+	rowsQ, err := ds.SQLDB.Query("SELECT id, course_id, title, description, time_limit, questions FROM quizzes")
+	if err == nil {
+		var loaded []models.Quiz
+		for rowsQ.Next() {
+			var q models.Quiz
+			var desc, qStr sql.NullString
+			_ = rowsQ.Scan(&q.ID, &q.CourseID, &q.Title, &desc, &q.TimeLimit, &qStr)
+			q.Description = desc.String
+			if qStr.Valid && qStr.String != "" {
+				_ = json.Unmarshal([]byte(qStr.String), &q.Questions)
+			}
+			loaded = append(loaded, q)
+		}
+		rowsQ.Close()
+		if len(loaded) > 0 {
+			ds.Quizzes = loaded
+		}
+	}
+
+	// 7. Quiz Submissions
+	rowsS, err := ds.SQLDB.Query("SELECT id, quiz_id, student_nim, student_name, answers, essay_answers, score, total_score, submitted_at FROM quiz_submissions ORDER BY submitted_at DESC")
+	if err == nil {
+		var loaded []models.QuizSubmission
+		for rowsS.Next() {
+			var sub models.QuizSubmission
+			var ansStr, essayStr sql.NullString
+			var subAt time.Time
+			_ = rowsS.Scan(&sub.ID, &sub.QuizID, &sub.StudentNIM, &sub.StudentName, &ansStr, &essayStr, &sub.Score, &sub.TotalScore, &subAt)
+			if ansStr.Valid && ansStr.String != "" {
+				_ = json.Unmarshal([]byte(ansStr.String), &sub.Answers)
+			}
+			if essayStr.Valid && essayStr.String != "" {
+				_ = json.Unmarshal([]byte(essayStr.String), &sub.EssayAnswers)
+			}
+			if !subAt.IsZero() {
+				sub.SubmittedAt = subAt
+			}
+			loaded = append(loaded, sub)
+		}
+		rowsS.Close()
+		if len(loaded) > 0 {
+			ds.Submissions = loaded
+		}
+	}
+
+	// 8. Assignments
+	rowsAsg, err := ds.SQLDB.Query("SELECT id, course_id, meeting_no, title, description, due_date, student_nim, student_name, repo_link, notes, status, grade, submitted_at FROM assignments ORDER BY submitted_at DESC")
+	if err == nil {
+		var loaded []models.Assignment
+		for rowsAsg.Next() {
+			var asg models.Assignment
+			var desc, dueDate, repoLink, notes, grade sql.NullString
+			var subAt time.Time
+			_ = rowsAsg.Scan(&asg.ID, &asg.CourseID, &asg.MeetingNo, &asg.Title, &desc, &dueDate, &asg.StudentNIM, &asg.StudentName, &repoLink, &notes, &asg.Status, &grade, &subAt)
+			asg.Description = desc.String
+			asg.DueDate = dueDate.String
+			asg.RepoLink = repoLink.String
+			asg.Notes = notes.String
+			asg.Grade = grade.String
+			if !subAt.IsZero() {
+				asg.SubmittedAt = subAt
+			}
+			loaded = append(loaded, asg)
+		}
+		rowsAsg.Close()
+		if len(loaded) > 0 {
+			ds.Assignments = loaded
+		}
+	}
+
+	// 9. Attendances
+	rowsAtt, err := ds.SQLDB.Query("SELECT id, course_id, meeting_no, student_nim, student_name, status, check_in_time FROM attendances")
+	if err == nil {
+		var loaded []models.Attendance
+		for rowsAtt.Next() {
+			var att models.Attendance
+			var checkIn time.Time
+			_ = rowsAtt.Scan(&att.ID, &att.CourseID, &att.MeetingNo, &att.StudentNIM, &att.StudentName, &att.Status, &checkIn)
+			if !checkIn.IsZero() {
+				att.CheckInTime = checkIn
+			}
+			loaded = append(loaded, att)
+		}
+		rowsAtt.Close()
+		if len(loaded) > 0 {
+			ds.Attendances = loaded
+		}
+	}
+}
+
+// MySQL persistence helper functions
+func (ds *DataStore) saveUserMySQL(u models.User) {
+	if ds.SQLDB == nil {
+		return
+	}
+	if u.CreatedAt.IsZero() {
+		u.CreatedAt = time.Now()
+	}
+	query := `INSERT INTO users (id, username, name, role, password, email, prodi, phone, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE name=VALUES(name), role=VALUES(role), password=VALUES(password), email=VALUES(email), prodi=VALUES(prodi), phone=VALUES(phone)`
+	_, err := ds.SQLDB.Exec(query, u.ID, u.Username, u.Name, u.Role, u.Password, u.Email, u.Prodi, u.Phone, u.CreatedAt)
+	if err != nil {
+		fmt.Printf("[DataStore] saveUserMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) deleteUserMySQL(identifier string) {
+	if ds.SQLDB == nil {
+		return
+	}
+	_, err := ds.SQLDB.Exec("DELETE FROM users WHERE username = ? OR id = ?", identifier, identifier)
+	if err != nil {
+		fmt.Printf("[DataStore] deleteUserMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveLandingSettingsMySQL(s models.LandingSettings) {
+	if ds.SQLDB == nil {
+		return
+	}
+	query := `INSERT INTO landing_settings (id, hero_title, hero_subtitle, institution_badge, semester_badge, dosen_bio, office_hours, room, phone)
+		VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE hero_title=VALUES(hero_title), hero_subtitle=VALUES(hero_subtitle), institution_badge=VALUES(institution_badge), semester_badge=VALUES(semester_badge), dosen_bio=VALUES(dosen_bio), office_hours=VALUES(office_hours), room=VALUES(room), phone=VALUES(phone)`
+	_, err := ds.SQLDB.Exec(query, s.HeroTitle, s.HeroSubtitle, s.InstitutionBadge, s.SemesterBadge, s.DosenBio, s.OfficeHours, s.Room, s.Phone)
+	if err != nil {
+		fmt.Printf("[DataStore] saveLandingSettingsMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveProfileMySQL(p models.Profile) {
+	if ds.SQLDB == nil {
+		return
+	}
+	expBytes, _ := json.Marshal(p.ExpertiseAreas)
+	query := `INSERT INTO profiles (id, name, degree, title, nidn, institution, faculty, department, email, phone, office_hours, room, avatar, bio, expertise_areas)
+		VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE name=VALUES(name), degree=VALUES(degree), title=VALUES(title), nidn=VALUES(nidn), institution=VALUES(institution), faculty=VALUES(faculty), department=VALUES(department), email=VALUES(email), phone=VALUES(phone), office_hours=VALUES(office_hours), room=VALUES(room), avatar=VALUES(avatar), bio=VALUES(bio), expertise_areas=VALUES(expertise_areas)`
+	_, err := ds.SQLDB.Exec(query, p.Name, p.Degree, p.Title, p.NIDN, p.Institution, p.Faculty, p.Department, p.Email, p.Phone, p.OfficeHours, p.Room, p.Avatar, p.Bio, string(expBytes))
+	if err != nil {
+		fmt.Printf("[DataStore] saveProfileMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveCourseMySQL(c models.Course) {
+	if ds.SQLDB == nil {
+		return
+	}
+	sylBytes, _ := json.Marshal(c.Syllabus)
+	modBytes, _ := json.Marshal(c.Modules)
+	if c.Status == "" {
+		c.Status = "Aktif"
+	}
+	query := `INSERT INTO courses (id, code, name, sks, semester, class_time, room, total_students, status, description, syllabus, modules)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE code=VALUES(code), name=VALUES(name), sks=VALUES(sks), semester=VALUES(semester), class_time=VALUES(class_time), room=VALUES(room), total_students=VALUES(total_students), status=VALUES(status), description=VALUES(description), syllabus=VALUES(syllabus), modules=VALUES(modules)`
+	_, err := ds.SQLDB.Exec(query, c.ID, c.Code, c.Name, c.SKS, c.Semester, c.ClassTime, c.Room, c.TotalStudents, c.Status, c.Description, string(sylBytes), string(modBytes))
+	if err != nil {
+		fmt.Printf("[DataStore] saveCourseMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) deleteCourseMySQL(id string) {
+	if ds.SQLDB == nil {
+		return
+	}
+	_, err := ds.SQLDB.Exec("DELETE FROM courses WHERE id = ?", id)
+	if err != nil {
+		fmt.Printf("[DataStore] deleteCourseMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) resetCoursesMySQL(courses []models.Course) {
+	if ds.SQLDB == nil {
+		return
+	}
+	_, _ = ds.SQLDB.Exec("DELETE FROM courses")
+	for _, c := range courses {
+		ds.saveCourseMySQL(c)
+	}
+}
+
+func (ds *DataStore) saveAnnouncementMySQL(a models.Announcement) {
+	if ds.SQLDB == nil {
+		return
+	}
+	if a.CreatedAt.IsZero() {
+		a.CreatedAt = time.Now()
+	}
+	query := `INSERT INTO announcements (id, title, category, course_id, content, author, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE title=VALUES(title), category=VALUES(category), course_id=VALUES(course_id), content=VALUES(content), author=VALUES(author)`
+	_, err := ds.SQLDB.Exec(query, a.ID, a.Title, a.Category, a.CourseID, a.Content, a.Author, a.CreatedAt)
+	if err != nil {
+		fmt.Printf("[DataStore] saveAnnouncementMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) deleteAnnouncementMySQL(id string) {
+	if ds.SQLDB == nil {
+		return
+	}
+	_, err := ds.SQLDB.Exec("DELETE FROM announcements WHERE id = ?", id)
+	if err != nil {
+		fmt.Printf("[DataStore] deleteAnnouncementMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveQuizMySQL(q models.Quiz) {
+	if ds.SQLDB == nil {
+		return
+	}
+	qBytes, _ := json.Marshal(q.Questions)
+	query := `INSERT INTO quizzes (id, course_id, title, description, time_limit, questions)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE course_id=VALUES(course_id), title=VALUES(title), description=VALUES(description), time_limit=VALUES(time_limit), questions=VALUES(questions)`
+	_, err := ds.SQLDB.Exec(query, q.ID, q.CourseID, q.Title, q.Description, q.TimeLimit, string(qBytes))
+	if err != nil {
+		fmt.Printf("[DataStore] saveQuizMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) deleteQuizMySQL(id string) {
+	if ds.SQLDB == nil {
+		return
+	}
+	_, err := ds.SQLDB.Exec("DELETE FROM quizzes WHERE id = ?", id)
+	if err != nil {
+		fmt.Printf("[DataStore] deleteQuizMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveSubmissionMySQL(sub models.QuizSubmission) {
+	if ds.SQLDB == nil {
+		return
+	}
+	if sub.SubmittedAt.IsZero() {
+		sub.SubmittedAt = time.Now()
+	}
+	ansBytes, _ := json.Marshal(sub.Answers)
+	essayBytes, _ := json.Marshal(sub.EssayAnswers)
+	query := `INSERT INTO quiz_submissions (id, quiz_id, student_nim, student_name, answers, essay_answers, score, total_score, submitted_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE answers=VALUES(answers), essay_answers=VALUES(essay_answers), score=VALUES(score), total_score=VALUES(total_score)`
+	_, err := ds.SQLDB.Exec(query, sub.ID, sub.QuizID, sub.StudentNIM, sub.StudentName, string(ansBytes), string(essayBytes), sub.Score, sub.TotalScore, sub.SubmittedAt)
+	if err != nil {
+		fmt.Printf("[DataStore] saveSubmissionMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveAssignmentMySQL(asg models.Assignment) {
+	if ds.SQLDB == nil {
+		return
+	}
+	if asg.SubmittedAt.IsZero() {
+		asg.SubmittedAt = time.Now()
+	}
+	query := `INSERT INTO assignments (id, course_id, meeting_no, title, description, due_date, student_nim, student_name, repo_link, notes, status, grade, submitted_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE title=VALUES(title), description=VALUES(description), repo_link=VALUES(repo_link), notes=VALUES(notes), status=VALUES(status), grade=VALUES(grade)`
+	_, err := ds.SQLDB.Exec(query, asg.ID, asg.CourseID, asg.MeetingNo, asg.Title, asg.Description, asg.DueDate, asg.StudentNIM, asg.StudentName, asg.RepoLink, asg.Notes, asg.Status, asg.Grade, asg.SubmittedAt)
+	if err != nil {
+		fmt.Printf("[DataStore] saveAssignmentMySQL error: %v\n", err)
+	}
+}
+
+func (ds *DataStore) saveAttendanceMySQL(att models.Attendance) {
+	if ds.SQLDB == nil {
+		return
+	}
+	if att.CheckInTime.IsZero() {
+		att.CheckInTime = time.Now()
+	}
+	query := `INSERT INTO attendances (id, course_id, meeting_no, student_nim, student_name, status, check_in_time)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE status=VALUES(status), check_in_time=VALUES(check_in_time)`
+	_, err := ds.SQLDB.Exec(query, att.ID, att.CourseID, att.MeetingNo, att.StudentNIM, att.StudentName, att.Status, att.CheckInTime)
+	if err != nil {
+		fmt.Printf("[DataStore] saveAttendanceMySQL error: %v\n", err)
 	}
 }
 
@@ -478,6 +1091,8 @@ func (ds *DataStore) UpdateLandingSettings(s models.LandingSettings) models.Land
 	ds.Profile.Room = s.Room
 	ds.Profile.Phone = s.Phone
 	ds.saveToDiskLocked()
+	ds.saveLandingSettingsMySQL(s)
+	ds.saveProfileMySQL(ds.Profile)
 	return ds.LandingSettings
 }
 
@@ -495,6 +1110,7 @@ func (ds *DataStore) AddCourse(c models.Course) models.Course {
 	}
 	ds.Courses = append(ds.Courses, c)
 	ds.saveToDiskLocked()
+	ds.saveCourseMySQL(c)
 	return c
 }
 
@@ -528,6 +1144,7 @@ func (ds *DataStore) UpdateCourse(c models.Course) bool {
 				ds.Courses[i].Status = c.Status
 			}
 			ds.saveToDiskLocked()
+			ds.saveCourseMySQL(ds.Courses[i])
 			return true
 		}
 	}
@@ -541,6 +1158,7 @@ func (ds *DataStore) DeleteCourse(id string) bool {
 		if c.ID == id {
 			ds.Courses = append(ds.Courses[:i], ds.Courses[i+1:]...)
 			ds.saveToDiskLocked()
+			ds.deleteCourseMySQL(id)
 			return true
 		}
 	}
@@ -612,6 +1230,7 @@ func (ds *DataStore) ResetCourses() []models.Course {
 		},
 	}
 	ds.saveToDiskLocked()
+	ds.resetCoursesMySQL(ds.Courses)
 	return ds.Courses
 }
 
@@ -646,6 +1265,7 @@ func (ds *DataStore) RegisterStudent(u models.User) (models.User, error) {
 
 	ds.Users = append(ds.Users, u)
 	ds.saveToDiskLocked()
+	ds.saveUserMySQL(u)
 	return u, nil
 }
 
@@ -681,6 +1301,7 @@ func (ds *DataStore) UpdateStudent(u models.User) (models.User, error) {
 				ds.Users[i].Phone = u.Phone
 			}
 			ds.saveToDiskLocked()
+			ds.saveUserMySQL(ds.Users[i])
 			return ds.Users[i], nil
 		}
 	}
@@ -695,6 +1316,7 @@ func (ds *DataStore) DeleteStudent(username string) error {
 		if (existing.Username == username || existing.ID == username) && existing.Role == "mahasiswa" {
 			ds.Users = append(ds.Users[:i], ds.Users[i+1:]...)
 			ds.saveToDiskLocked()
+			ds.deleteUserMySQL(username)
 			return nil
 		}
 	}
@@ -1069,9 +1691,11 @@ func (ds *DataStore) UpdateProfile(p models.Profile) {
 		if ds.Users[i].Role == "dosen" {
 			ds.Users[i].Name = fullName
 			ds.Users[i].Email = p.Email
+			ds.saveUserMySQL(ds.Users[i])
 		}
 	}
 	ds.saveToDiskLocked()
+	ds.saveProfileMySQL(p)
 }
 
 func (ds *DataStore) GetCourses() []models.Course {
@@ -1105,6 +1729,7 @@ func (ds *DataStore) AddAnnouncement(a models.Announcement) models.Announcement 
 	a.Author = ds.Profile.Name + ", " + ds.Profile.Degree
 	ds.Announcements = append([]models.Announcement{a}, ds.Announcements...)
 	ds.saveToDiskLocked()
+	ds.saveAnnouncementMySQL(a)
 	return a
 }
 
@@ -1115,6 +1740,7 @@ func (ds *DataStore) DeleteAnnouncement(id string) bool {
 		if a.ID == id {
 			ds.Announcements = append(ds.Announcements[:i], ds.Announcements[i+1:]...)
 			ds.saveToDiskLocked()
+			ds.deleteAnnouncementMySQL(id)
 			return true
 		}
 	}
@@ -1147,6 +1773,7 @@ func (ds *DataStore) CreateQuiz(q models.Quiz) models.Quiz {
 	}
 	ds.Quizzes = append(ds.Quizzes, q)
 	ds.saveToDiskLocked()
+	ds.saveQuizMySQL(q)
 	return q
 }
 
@@ -1179,6 +1806,7 @@ func (ds *DataStore) SubmitQuiz(sub models.QuizSubmission) models.QuizSubmission
 
 	ds.Submissions = append([]models.QuizSubmission{sub}, ds.Submissions...)
 	ds.saveToDiskLocked()
+	ds.saveSubmissionMySQL(sub)
 	return sub
 }
 
@@ -1190,6 +1818,7 @@ func (ds *DataStore) AddAssignment(asg models.Assignment) models.Assignment {
 	asg.SubmittedAt = time.Now()
 	ds.Assignments = append([]models.Assignment{asg}, ds.Assignments...)
 	ds.saveToDiskLocked()
+	ds.saveAssignmentMySQL(asg)
 	return asg
 }
 
@@ -1208,6 +1837,7 @@ func (ds *DataStore) AddAttendance(att models.Attendance) models.Attendance {
 			ds.Attendances[i].Status = att.Status
 			ds.Attendances[i].CheckInTime = time.Now()
 			ds.saveToDiskLocked()
+			ds.saveAttendanceMySQL(ds.Attendances[i])
 			return ds.Attendances[i]
 		}
 	}
@@ -1216,6 +1846,7 @@ func (ds *DataStore) AddAttendance(att models.Attendance) models.Attendance {
 	att.CheckInTime = time.Now()
 	ds.Attendances = append([]models.Attendance{att}, ds.Attendances...)
 	ds.saveToDiskLocked()
+	ds.saveAttendanceMySQL(att)
 	return att
 }
 
@@ -1238,6 +1869,7 @@ func (ds *DataStore) DeleteQuiz(id string) bool {
 		if q.ID == id {
 			ds.Quizzes = append(ds.Quizzes[:i], ds.Quizzes[i+1:]...)
 			ds.saveToDiskLocked()
+			ds.deleteQuizMySQL(id)
 			return true
 		}
 	}
@@ -1255,6 +1887,7 @@ func (ds *DataStore) AddQuizQuestion(quizID string, q models.QuizQuestion) bool 
 			q.ID = len(quiz.Questions) + 1
 			ds.Quizzes[i].Questions = append(ds.Quizzes[i].Questions, q)
 			ds.saveToDiskLocked()
+			ds.saveQuizMySQL(ds.Quizzes[i])
 			return true
 		}
 	}
@@ -1270,6 +1903,7 @@ func (ds *DataStore) DeleteQuizQuestion(quizID string, questionID int) bool {
 				if q.ID == questionID {
 					ds.Quizzes[i].Questions = append(quiz.Questions[:j], quiz.Questions[j+1:]...)
 					ds.saveToDiskLocked()
+					ds.saveQuizMySQL(ds.Quizzes[i])
 					return true
 				}
 			}
@@ -1317,6 +1951,7 @@ func (ds *DataStore) UpdateModuleStatus(courseID string, meetingNo int, title st
 						ds.Courses[i].Modules[j].TaskDueDate = taskDueDate
 					}
 					ds.saveToDiskLocked()
+					ds.saveCourseMySQL(ds.Courses[i])
 					return true
 				}
 			}
@@ -1432,13 +2067,14 @@ func (ds *DataStore) SetLiveQuizSessionStatus(pin string, status string, current
 					ds.Submissions[i].Score = scorePct
 					ds.Submissions[i].TotalScore = 100.0
 					ds.Submissions[i].SubmittedAt = time.Now()
+					ds.saveSubmissionMySQL(ds.Submissions[i])
 					found = true
 					break
 				}
 			}
 
 			if !found {
-				ds.Submissions = append(ds.Submissions, models.QuizSubmission{
+				newSub := models.QuizSubmission{
 					ID:          subID,
 					QuizID:      session.QuizID,
 					StudentNIM:  p.StudentNIM,
@@ -1447,7 +2083,9 @@ func (ds *DataStore) SetLiveQuizSessionStatus(pin string, status string, current
 					Score:       scorePct,
 					TotalScore:  100.0,
 					SubmittedAt: time.Now(),
-				})
+				}
+				ds.Submissions = append(ds.Submissions, newSub)
+				ds.saveSubmissionMySQL(newSub)
 			}
 		}
 	}

@@ -648,8 +648,8 @@ const submitAssignment = async () => {
             </div>
           </div>
 
-          <!-- TOPICS & CPMK LIST (Always Visible so Students can see Topic Overview) -->
-          <div class="topics-box">
+          <!-- TOPICS & CPMK LIST (Visible when Unlocked for Mahasiswa or always for Dosen) -->
+          <div v-if="isDosen || isModuleOpenForStudents(mod)" class="topics-box">
             <h4>📌 Pokok Bahasan & CPMK Pertemuan Ini:</h4>
             <div class="topics-grid">
               <span v-for="(tp, idx) in mod.topics" :key="idx" class="topic-chip">

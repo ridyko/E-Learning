@@ -10,13 +10,14 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password` VARCHAR(255) NOT NULL,
   `email` VARCHAR(100) DEFAULT NULL,
   `prodi` VARCHAR(100) DEFAULT NULL,
+  `phone` VARCHAR(50) DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 2. Table Landing Settings
 CREATE TABLE IF NOT EXISTS `landing_settings` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `hero_title` VARCHAR(255) NOT NULL,
+  `hero_title` TEXT NOT NULL,
   `hero_subtitle` TEXT NOT NULL,
   `institution_badge` VARCHAR(100) DEFAULT NULL,
   `semester_badge` VARCHAR(100) DEFAULT NULL,
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `class_time` VARCHAR(100) DEFAULT NULL,
   `room` VARCHAR(100) DEFAULT NULL,
   `total_students` INT NOT NULL DEFAULT 0,
+  `status` VARCHAR(50) NOT NULL DEFAULT 'Aktif',
   `description` TEXT DEFAULT NULL,
   `syllabus` LONGTEXT DEFAULT NULL,
   `modules` LONGTEXT DEFAULT NULL
@@ -87,7 +89,8 @@ CREATE TABLE IF NOT EXISTS `quiz_submissions` (
   `quiz_id` VARCHAR(50) NOT NULL,
   `student_nim` VARCHAR(50) NOT NULL,
   `student_name` VARCHAR(100) NOT NULL,
-  `answers` TEXT DEFAULT NULL,
+  `answers` LONGTEXT DEFAULT NULL,
+  `essay_answers` LONGTEXT DEFAULT NULL,
   `score` DOUBLE NOT NULL DEFAULT 0,
   `total_score` DOUBLE NOT NULL DEFAULT 100,
   `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -121,9 +124,10 @@ CREATE TABLE IF NOT EXISTS `attendances` (
   `check_in_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Data Default (Awal)
-INSERT INTO `users` (`id`, `username`, `name`, `role`, `password`, `email`, `prodi`) VALUES
-('usr-dosen-1', '21099001', 'Dosen Pengampu', 'dosen', '123456', 'dosen@swadharma.ac.id', 'Teknik Informatika'),
-('usr-std-1', '20260801001', 'Ahmad Fauzi', 'mahasiswa', '123456', 'ahmad.fauzi@student.swadharma.ac.id', 'Teknik Informatika'),
-('usr-std-2', '20260801002', 'Siti Nurhaliza', 'mahasiswa', '123456', 'siti.nurhaliza@student.swadharma.ac.id', 'Sistem Informasi')
-ON DUPLICATE KEY UPDATE `username`=`username`;
+-- Default Seed Data
+INSERT INTO `users` (`id`, `username`, `name`, `role`, `password`, `email`, `prodi`, `phone`) VALUES
+('usr-dosen-1', '21099001', 'Rio Widyatmoko, S.Kom, M.M.S.I', 'dosen', '123456', 'rio.widyatmoko@swadharma.ac.id', 'Teknik Informatika', '+62 812-9876-5432'),
+('usr-std-1', '20260801001', 'AHMAD FAUZI', 'mahasiswa', '123456', 'ahmad.fauzi@student.swadharma.ac.id', 'Teknik Informatika (S1)', NULL),
+('usr-std-2', '20260801002', 'SITI NURHALIZA', 'mahasiswa', '123456', 'siti.nurhaliza@student.swadharma.ac.id', 'Sistem Informasi (S1)', NULL)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`);
+
