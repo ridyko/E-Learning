@@ -47,15 +47,17 @@ const qrCodeUrl = computed(() => {
 
 // Class Roster / Students List for Dosen View (Default empty status per meeting unless saved)
 const classRoster = ref([
-  { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', status: '' },
-  { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', status: '' },
-  { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', status: '' },
-  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', status: '' },
-  { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', status: '' },
-  { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', status: '' },
-  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', status: '' },
-  { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', status: '' },
+  { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', prodi: 'Sistem Informasi (S1)', status: '' },
 ])
+
+const selectedProdi = ref('ALL') // 'ALL', 'Teknik Informatika (S1)', 'Sistem Informasi (S1)'
 
 // Student Check-In Form State
 const studentNim = ref('')
@@ -87,6 +89,31 @@ watch([selectedCourse, selectedMeeting], () => {
   loadMeetingAttendance()
 })
 
+const fetchStudents = async () => {
+  try {
+    const res = await fetch('/api/students')
+    if (res.ok) {
+      const data = await res.json()
+      data.forEach(st => {
+        const existing = classRoster.value.find(r => r.nim === st.username)
+        if (existing) {
+          if (st.prodi) existing.prodi = st.prodi
+        } else {
+          classRoster.value.push({
+            id: st.id || 'std-' + st.username,
+            name: (st.name || st.username).toUpperCase(),
+            nim: st.username,
+            prodi: st.prodi || 'Teknik Informatika (S1)',
+            status: ''
+          })
+        }
+      })
+    }
+  } catch (err) {
+    console.warn('Fetch students error:', err)
+  }
+}
+
 const fetchAttendance = async () => {
   try {
     const res = await fetch('/api/attendance')
@@ -106,36 +133,53 @@ const fetchAttendance = async () => {
 
 onMounted(() => {
   checkUser()
+  fetchStudents()
   fetchAttendance()
 })
 
-// Filtered Students List by Search Query
+// Filtered Students List by Search Query and Program Studi
 const filteredRoster = computed(() => {
-  if (!searchQuery.value) return classRoster.value
-  const q = searchQuery.value.toLowerCase()
-  return classRoster.value.filter(s => 
-    s.name.toLowerCase().includes(q) || s.nim.toLowerCase().includes(q)
-  )
+  let list = classRoster.value
+
+  if (selectedProdi.value !== 'ALL') {
+    list = list.filter(s => s.prodi === selectedProdi.value)
+  }
+
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(s => 
+      s.name.toLowerCase().includes(q) || 
+      s.nim.toLowerCase().includes(q) ||
+      (s.prodi && s.prodi.toLowerCase().includes(q))
+    )
+  }
+  return list
 })
 
 // Summary Stats
 const stats = computed(() => {
-  const total = classRoster.value.length
-  const hadir = classRoster.value.filter(s => s.status === 'Hadir').length
-  const absen = classRoster.value.filter(s => s.status === 'Absen').length
-  const izin = classRoster.value.filter(s => s.status === 'Izin').length
-  const sakit = classRoster.value.filter(s => s.status === 'Sakit').length
-  const belum = classRoster.value.filter(s => !s.status).length
+  const currentList = filteredRoster.value
+  const total = currentList.length
+  const hadir = currentList.filter(s => s.status === 'Hadir').length
+  const absen = currentList.filter(s => s.status === 'Absen').length
+  const izin = currentList.filter(s => s.status === 'Izin').length
+  const sakit = currentList.filter(s => s.status === 'Sakit').length
+  const belum = currentList.filter(s => !s.status).length
   const percentage = total > 0 ? ((hadir / total) * 100).toFixed(1) : 0
-  return { total, hadir, absen, izin, sakit, belum, percentage }
+
+  const totalAll = classRoster.value.length
+  const countTif = classRoster.value.filter(s => s.prodi === 'Teknik Informatika (S1)').length
+  const countSi = classRoster.value.filter(s => s.prodi === 'Sistem Informasi (S1)').length
+
+  return { total, hadir, absen, izin, sakit, belum, percentage, totalAll, countTif, countSi }
 })
 
 // Quick Batch Action: Set All Students Status
 const setAllStatus = (targetStatus) => {
-  classRoster.value.forEach(student => {
+  filteredRoster.value.forEach(student => {
     student.status = targetStatus
   })
-  showSuccess('Set Kehadiran Massal!', `Semua mahasiswa berhasil diubah statusnya menjadi '${targetStatus}'.`)
+  showSuccess('Set Kehadiran Massal!', `Semua ${filteredRoster.value.length} mahasiswa berhasil diubah statusnya menjadi '${targetStatus}'.`)
 }
 
 // Single Student Status Change
@@ -176,7 +220,11 @@ const addNewStudentPrompt = async () => {
     html:
       '<div style="text-align: left; font-size: 0.88rem; color: #475569; margin-bottom: 0.5rem; font-weight: 700;">Masukkan Data Mahasiswa:</div>' +
       '<input id="swal-input-name" class="swal2-input" placeholder="Nama Lengkap Mahasiswa" style="margin: 0.5rem 0; width: 100%; box-sizing: border-box;">' +
-      '<input id="swal-input-nim" class="swal2-input" placeholder="NIM Mahasiswa (cth: 221112099)" style="margin: 0.5rem 0; width: 100%; box-sizing: border-box;">',
+      '<input id="swal-input-nim" class="swal2-input" placeholder="NIM Mahasiswa (cth: 221112099)" style="margin: 0.5rem 0; width: 100%; box-sizing: border-box;">' +
+      '<select id="swal-input-prodi" class="swal2-select" style="margin: 0.5rem 0; width: 100%;">' +
+        '<option value="Teknik Informatika (S1)">Teknik Informatika (S1)</option>' +
+        '<option value="Sistem Informasi (S1)">Sistem Informasi (S1)</option>' +
+      '</select>',
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: 'Tambah ke Daftar',
@@ -186,11 +234,12 @@ const addNewStudentPrompt = async () => {
     preConfirm: () => {
       const name = document.getElementById('swal-input-name').value
       const nim = document.getElementById('swal-input-nim').value
+      const prodi = document.getElementById('swal-input-prodi').value
       if (!name || !nim) {
         Swal.showValidationMessage('Nama dan NIM wajib diisi!')
         return false
       }
-      return { name, nim }
+      return { name, nim, prodi }
     }
   })
 
@@ -199,10 +248,11 @@ const addNewStudentPrompt = async () => {
       id: 'std-' + Date.now(),
       name: formValues.name.toUpperCase(),
       nim: formValues.nim,
+      prodi: formValues.prodi,
       status: 'Hadir'
     }
     classRoster.value.push(newStudent)
-    showSuccess('Mahasiswa Ditambahkan 🎓', `${newStudent.name} (${newStudent.nim}) berhasil ditambahkan.`)
+    showSuccess('Mahasiswa Ditambahkan 🎓', `${newStudent.name} (${newStudent.nim}) - ${newStudent.prodi} berhasil ditambahkan.`)
   }
 }
 
@@ -667,13 +717,22 @@ const openIzinModal = async () => {
               <option v-for="n in 14" :key="n" :value="n">Pertemuan {{ n }}</option>
             </select>
           </div>
+
+          <div>
+            <label class="filter-label">Program Studi</label>
+            <select v-model="selectedProdi" class="glass-input select-lg">
+              <option value="ALL">Semua Program Studi ({{ stats.totalAll }})</option>
+              <option value="Teknik Informatika (S1)">💻 Teknik Informatika (S1) ({{ stats.countTif }})</option>
+              <option value="Sistem Informasi (S1)">📊 Sistem Informasi (S1) ({{ stats.countSi }})</option>
+            </select>
+          </div>
         </div>
 
         <!-- Search & Batch Tools -->
         <div class="filter-tools">
           <div class="search-input-box">
             <Search class="search-icon" />
-            <input v-model="searchQuery" class="search-input" placeholder="Cari Nama Mahasiswa / NIM..." />
+            <input v-model="searchQuery" class="search-input" placeholder="Cari Nama Mahasiswa / NIM / Prodi..." />
           </div>
           <button @click="addNewStudentPrompt" class="btn-add-student">
             <UserPlus class="btn-icon-xs" />
@@ -717,7 +776,7 @@ const openIzinModal = async () => {
             <thead>
               <tr>
                 <th class="col-no">No</th>
-                <th class="col-student">Mahasiswa</th>
+                <th class="col-student">Mahasiswa & Program Studi</th>
                 <th class="col-status-badge">Kehadiran</th>
                 <th class="col-actions">
                   <div class="status-header-wrapper">
@@ -750,8 +809,16 @@ const openIzinModal = async () => {
                 <td class="col-no">{{ idx + 1 }}</td>
                 <td class="col-student">
                   <div class="student-name-group">
-                    <h4 class="student-name-text">{{ student.name }}</h4>
-                    <span class="student-nim-text">{{ student.nim }}</span>
+                    <div class="name-badge-row">
+                      <h4 class="student-name-text">{{ student.name }}</h4>
+                      <span 
+                        class="prodi-tag-pill"
+                        :class="student.prodi === 'Sistem Informasi (S1)' ? 'tag-si' : 'tag-tif'"
+                      >
+                        {{ student.prodi === 'Sistem Informasi (S1)' ? '📊 Sistem Informasi' : '💻 Teknik Informatika' }}
+                      </span>
+                    </div>
+                    <span class="student-nim-text">NIM: {{ student.nim }}</span>
                   </div>
                 </td>
                 <td class="col-status-badge">
@@ -1287,11 +1354,41 @@ const openIzinModal = async () => {
   justify-content: center;
 }
 
+.name-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.2rem;
+}
+
+.prodi-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.tag-tif {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.tag-si {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
 .student-name-text {
   font-size: 0.92rem;
   font-weight: 800;
   color: #0f172a;
-  margin: 0 0 0.2rem 0;
+  margin: 0;
   letter-spacing: 0.02em;
 }
 
