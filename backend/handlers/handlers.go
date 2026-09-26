@@ -136,11 +136,60 @@ func RegisterStudentHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetStudentsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	students := store.DB.GetStudents()
-	for i := range students {
-		students[i].Password = ""
+
+	switch r.Method {
+	case "GET":
+		students := store.DB.GetStudents()
+		for i := range students {
+			students[i].Password = ""
+		}
+		json.NewEncoder(w).Encode(students)
+
+	case "POST":
+		var user models.User
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		newUser, err := store.DB.RegisterStudent(user)
+		if err != nil {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+			return
+		}
+		newUser.Password = ""
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(newUser)
+
+	case "PUT":
+		var user models.User
+		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		updated, err := store.DB.UpdateStudent(user)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		updated.Password = ""
+		json.NewEncoder(w).Encode(updated)
+
+	case "DELETE":
+		username := r.URL.Query().Get("username")
+		if username == "" {
+			http.Error(w, "Username / NIM required", http.StatusBadRequest)
+			return
+		}
+		if err := store.DB.DeleteStudent(username); err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
-	json.NewEncoder(w).Encode(students)
 }
 
 func GetProfile(w http.ResponseWriter, r *http.Request) {

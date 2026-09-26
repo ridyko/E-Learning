@@ -83,9 +83,19 @@ const checkUser = () => {
 
 const isDosen = computed(() => currentUser.value?.role === 'dosen')
 
+const availableCourses = computed(() => {
+  if (isDosen.value) return courses.value
+  return courses.value.filter(c => c.status !== 'Non Aktif')
+})
+
 const courseQuizzes = computed(() => {
-  if (!selectedCourseId.value) return quizzes.value
-  return quizzes.value.filter(q => q.course_id === selectedCourseId.value)
+  let list = quizzes.value
+  if (!isDosen.value) {
+    const inactiveIds = courses.value.filter(c => c.status === 'Non Aktif').map(c => c.id)
+    list = list.filter(q => !inactiveIds.includes(q.course_id))
+  }
+  if (!selectedCourseId.value) return list
+  return list.filter(q => q.course_id === selectedCourseId.value)
 })
 
 const fetchDosenSetupData = async () => {

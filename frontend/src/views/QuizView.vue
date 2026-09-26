@@ -6,6 +6,7 @@ import { showWarning } from '../utils/swal.js'
 
 const quizzes = ref([])
 const quizSubmissions = ref([])
+const courses = ref([])
 const activeQuiz = ref(null)
 const currentUser = ref(null)
 
@@ -20,16 +21,28 @@ const isDosen = computed(() => currentUser.value?.role === 'dosen')
 
 const fetchQuizzesData = async () => {
   try {
-    const [resQ, resS] = await Promise.all([
+    const [resQ, resS, resC] = await Promise.all([
       fetch('/api/quizzes'),
-      fetch('/api/quizzes/submissions')
+      fetch('/api/quizzes/submissions'),
+      fetch('/api/courses')
     ])
     quizzes.value = await resQ.json()
     quizSubmissions.value = await resS.json()
+    courses.value = await resC.json()
   } catch (err) {
     console.warn('Fetch quizzes error:', err)
   }
 }
+
+const visibleQuizzes = computed(() => {
+  if (isDosen.value) return quizzes.value
+  
+  const inactiveCourseIds = courses.value
+    .filter(c => c.status === 'Non Aktif')
+    .map(c => c.id)
+
+  return quizzes.value.filter(q => !inactiveCourseIds.includes(q.course_id))
+})
 
 const getStudentSubmission = (quizId) => {
   if (!currentUser.value || currentUser.value.role === 'dosen') return null
@@ -113,7 +126,7 @@ const handleQuizFinish = () => {
     <!-- Quiz Selection Cards Grid -->
     <div v-else class="quiz-grid">
       <div 
-        v-for="q in quizzes" 
+        v-for="q in visibleQuizzes" 
         :key="q.id" 
         class="glass-card quiz-select-card"
         :class="{ 'quiz-completed-card': getStudentSubmission(q.id) }"

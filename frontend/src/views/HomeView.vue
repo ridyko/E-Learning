@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import DosenProfile from '../components/DosenProfile.vue'
 import { 
@@ -23,6 +23,12 @@ import {
 const router = useRouter()
 const profile = ref(null)
 const courses = ref([])
+const visibleCourses = computed(() => {
+  if (currentUser.value?.role === 'dosen') {
+    return courses.value
+  }
+  return courses.value.filter(c => c.status !== 'Non Aktif')
+})
 const announcements = ref([])
 const landingSettings = ref({
   hero_title: 'Portal Pembelajaran Digital Terpadu',
@@ -270,13 +276,16 @@ onMounted(() => {
 
         <div class="course-grid">
           <div 
-            v-for="course in courses" 
+            v-for="course in visibleCourses" 
             :key="course.id" 
             class="glass-card course-card"
           >
             <div class="card-badge-row">
               <span class="badge badge-gold">{{ course.code }}</span>
               <span class="badge badge-blue">{{ course.sks }} SKS</span>
+              <span v-if="currentUser?.role === 'dosen'" :class="course.status === 'Non Aktif' ? 'badge badge-rose' : 'badge badge-emerald'">
+                {{ course.status || 'Aktif' }}
+              </span>
             </div>
 
             <h3 class="course-title">{{ course.name }}</h3>

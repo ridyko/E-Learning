@@ -10,6 +10,7 @@ type User struct {
 	Password  string    `json:"password"`
 	Email     string    `json:"email"`
 	Prodi     string    `json:"prodi,omitempty"`
+	Phone     string    `json:"phone,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -68,6 +69,7 @@ type Course struct {
 	Syllabus      []string `json:"syllabus"`
 	Modules       []Module `json:"modules"`
 	TotalStudents int      `json:"total_students"`
+	Status        string   `json:"status,omitempty"`
 }
 
 type Announcement struct {

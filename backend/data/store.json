@@ -23,21 +23,81 @@
     {
       "id": "usr-std-1",
       "username": "20260801001",
-      "name": "Ahmad Fauzi",
+      "name": "AHMAD FAUZI",
       "role": "mahasiswa",
       "password": "123456",
       "email": "ahmad.fauzi@student.swadharma.ac.id",
-      "prodi": "Teknik Informatika",
+      "prodi": "Teknik Informatika (S1)",
       "created_at": "2026-09-25T06:35:16.60246+07:00"
     },
     {
       "id": "usr-std-2",
       "username": "20260801002",
-      "name": "Siti Nurhaliza",
+      "name": "SITI NURHALIZA",
       "role": "mahasiswa",
       "password": "123456",
       "email": "siti.nurhaliza@student.swadharma.ac.id",
-      "prodi": "Sistem Informasi",
+      "prodi": "Sistem Informasi (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-3",
+      "username": "221112019",
+      "name": "LINTANG ANGEL STEFANI",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "lintang.angel@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-4",
+      "username": "221112020",
+      "name": "IGNATION SENSEKO MANGGUR",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "ignation.senseko@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-5",
+      "username": "231112028",
+      "name": "FAIZ IJLAL ARAYYAN",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "faiz.ijlal@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-6",
+      "username": "241112001",
+      "name": "ALDINUS NDRURU",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "aldinus.ndruru@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-7",
+      "username": "241112002",
+      "name": "OVAROLDUS SUPRATMAN",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "ovaroldus.s@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
+      "created_at": "2026-09-25T06:35:16.60246+07:00"
+    },
+    {
+      "id": "usr-std-8",
+      "username": "241112003",
+      "name": "RADEN DHAFA ADHITYA SOSIAWAN",
+      "role": "mahasiswa",
+      "password": "123456",
+      "email": "raden.dhafa@swadharma.ac.id",
+      "prodi": "Teknik Informatika (S1)",
       "created_at": "2026-09-25T06:35:16.60246+07:00"
     }
   ],
@@ -71,6 +131,7 @@
       "semester": "Ganjil 2026/2027",
       "class_time": "Senin, 08.00 - 10.30 WIB",
       "room": "Lab Komputer 2 / Hybrid Zoom",
+      "status": "Aktif",
       "description": "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian \u0026 pemeliharaan perangkat lunak.",
       "syllabus": [
         "Pengantar Rekayasa Perangkat Lunak \u0026 Evolution of Software",
@@ -304,6 +365,7 @@
       "semester": "Ganjil 2026/2027",
       "class_time": "Rabu, 08.00 - 10.30 WIB",
       "room": "Lab Pemrograman Web / Modern Studio",
+      "status": "Aktif",
       "description": "Mata kuliah praktikum \u0026 teori pengembangan aplikasi web modern modern frontend \u0026 backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
       "syllabus": [
         "Pengantar Arsitektur Web \u0026 Protokol HTTP/HTTPS",

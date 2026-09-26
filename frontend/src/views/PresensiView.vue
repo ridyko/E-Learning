@@ -28,6 +28,23 @@ const selectedCourse = ref('rpl-2026')
 const selectedMeeting = ref(1)
 const searchQuery = ref('')
 const showQrModal = ref(false)
+const courses = ref([])
+
+const fetchCourses = async () => {
+  try {
+    const res = await fetch('/api/courses')
+    if (res.ok) {
+      courses.value = await res.json()
+    }
+  } catch (err) {
+    console.warn('Presensi fetch courses error:', err)
+  }
+}
+
+const visibleCourses = computed(() => {
+  if (isDosen.value) return courses.value
+  return courses.value.filter(c => c.status !== 'Non Aktif')
+})
 
 const checkUser = () => {
   const u = localStorage.getItem('user')
@@ -157,6 +174,7 @@ const fetchAttendance = async () => {
 
 onMounted(() => {
   checkUser()
+  fetchCourses()
   fetchStudents()
   fetchAttendance()
 })
@@ -608,8 +626,15 @@ const openIzinModal = async () => {
         <div class="select-course-box">
           <label class="filter-label">Pilih Mata Kuliah Perkuliahan:</label>
           <select v-model="selectedCourse" class="glass-input select-lg">
-            <option value="rpl-2026">Rekayasa Perangkat Lunak (TIF-301)</option>
-            <option value="webdev-2026">Pemrograman Web (TIF-302)</option>
+            <template v-if="visibleCourses.length > 0">
+              <option v-for="c in visibleCourses" :key="c.id" :value="c.id">
+                {{ c.name }} ({{ c.code }})
+              </option>
+            </template>
+            <template v-else>
+              <option value="rpl-2026">Rekayasa Perangkat Lunak (TIF-301)</option>
+              <option value="webdev-2026">Pemrograman Web (TIF-302)</option>
+            </template>
           </select>
         </div>
 
@@ -730,8 +755,15 @@ const openIzinModal = async () => {
           <div>
             <label class="filter-label">Mata Kuliah</label>
             <select v-model="selectedCourse" class="glass-input select-lg">
-              <option value="rpl-2026">Rekayasa Perangkat Lunak (TIF-301)</option>
-              <option value="webdev-2026">Pemrograman Web (TIF-302)</option>
+              <template v-if="courses.length > 0">
+                <option v-for="c in courses" :key="c.id" :value="c.id">
+                  {{ c.name }} ({{ c.code }}) {{ c.status === 'Non Aktif' ? '[NON-AKTIF]' : '' }}
+                </option>
+              </template>
+              <template v-else>
+                <option value="rpl-2026">Rekayasa Perangkat Lunak (TIF-301)</option>
+                <option value="webdev-2026">Pemrograman Web (TIF-302)</option>
+              </template>
             </select>
           </div>
 

@@ -50,10 +50,19 @@ const switchCourse = (courseId) => {
   router.push(`/course/${courseId}`)
 }
 
-// User & Role State
 const currentUser = ref(null)
 const isDosen = computed(() => currentUser.value?.role === 'dosen')
 const isMahasiswa = computed(() => currentUser.value?.role === 'mahasiswa')
+
+const isCourseInactiveForStudent = computed(() => {
+  if (isDosen.value) return false
+  return course.value?.status === 'Non Aktif'
+})
+
+const visibleAllCourses = computed(() => {
+  if (isDosen.value) return allCourses.value
+  return allCourses.value.filter(c => c.status !== 'Non Aktif')
+})
 
 // Assignment state
 const assignments = ref([])
@@ -459,7 +468,7 @@ const submitAssignment = async () => {
 <template>
   <div class="course-container animate-fade-in" v-if="course">
     <!-- Course Switcher Bar -->
-    <div v-if="allCourses.length > 0" class="course-switcher-bar glass-card">
+    <div v-if="visibleAllCourses.length > 0" class="course-switcher-bar glass-card">
       <div class="switcher-header-row">
         <div class="switcher-label">
           <Layers class="switcher-icon text-gold" />
@@ -467,7 +476,7 @@ const submitAssignment = async () => {
         </div>
         <div class="switcher-tabs">
           <button 
-            v-for="c in allCourses" 
+            v-for="c in visibleAllCourses" 
             :key="c.id"
             @click="switchCourse(c.id)"
             :class="['switcher-tab-btn', (course && course.id === c.id) ? 'active' : '']"
@@ -475,7 +484,8 @@ const submitAssignment = async () => {
             <component :is="(c.name.toLowerCase().includes('web') || c.id.includes('web')) ? Code : BookOpen" class="tab-icon" />
             <span>{{ c.name }}</span>
             <span class="code-tag">{{ c.code }}</span>
-            <span v-if="course && course.id === c.id" class="active-indicator">Aktif</span>
+            <span v-if="c.status === 'Non Aktif'" class="code-tag" style="background: #fee2e2; color: #dc2626;">Non-Aktif</span>
+            <span v-else-if="course && course.id === c.id" class="active-indicator">Aktif</span>
           </button>
         </div>
         <router-link v-if="isDosen" to="/mata-kuliah" class="btn-manage-matkul" title="Kelola & Tambah Mata Kuliah Baru">
@@ -490,6 +500,9 @@ const submitAssignment = async () => {
       <div class="header-badges">
         <span class="badge badge-gold">{{ course.code }}</span>
         <span class="badge badge-blue">{{ course.sks }} SKS</span>
+        <span :class="course.status === 'Non Aktif' ? 'badge badge-rose' : 'badge badge-emerald'">
+          Status: {{ course.status || 'Aktif' }}
+        </span>
         <span class="badge badge-emerald">Dosen: Rio Widyatmoko, S.Kom, M.M.S.I</span>
       </div>
       <h2>{{ course.name }}</h2>
@@ -502,8 +515,22 @@ const submitAssignment = async () => {
       </div>
     </div>
 
+    <!-- INACTIVE COURSE WARNING BANNER FOR STUDENTS -->
+    <div v-if="isCourseInactiveForStudent" class="glass-card" style="padding: 2.5rem; text-align: center; margin-bottom: 2rem; background: #fff5f5; border: 1.5px solid #fecaca; border-radius: 1rem;">
+      <div style="width: 4rem; height: 4rem; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem;">
+        <Lock style="width: 2.2rem; height: 2.2rem; color: #dc2626;" />
+      </div>
+      <h3 style="font-size: 1.5rem; font-weight: 800; color: #991b1b; margin-bottom: 0.5rem;">Mata Kuliah Non-Aktif 🔒</h3>
+      <p style="font-size: 1rem; color: #7f1d1d; max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.6;">
+        Mata kuliah <strong>{{ course.name }}</strong> saat ini berstatus <strong>Non-Aktif</strong> oleh Dosen Pengampu. Modul pertemuan, materi, dan tugas belum dapat diakses oleh Mahasiswa.
+      </p>
+      <router-link to="/" class="btn btn-gold">
+        <span>Kembali ke Beranda Utama</span>
+      </router-link>
+    </div>
+
     <!-- Main Content Layout -->
-    <div class="course-layout">
+    <div v-else class="course-layout">
       <!-- Left Sidebar: Meetings Navigation (1-14) -->
       <div class="meetings-sidebar glass-card">
         <div class="sidebar-header">

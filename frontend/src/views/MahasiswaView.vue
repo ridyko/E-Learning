@@ -225,14 +225,30 @@ const openAddStudentModal = async () => {
   })
 
   if (formValues) {
-    const newStudent = {
-      id: 'std-' + Date.now(),
-      ...formValues,
-      status: 'Aktif',
-      ipk: '3.70'
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formValues.nim,
+          name: formValues.name,
+          prodi: formValues.prodi,
+          email: formValues.email,
+          phone: formValues.phone,
+          password: '123456'
+        })
+      })
+
+      if (res.ok) {
+        showSuccess('Mahasiswa Ditambahkan! 🎓', `${formValues.name} (${formValues.nim}) berhasil disimpan ke database.`)
+        fetchStudents()
+      } else {
+        const err = await res.json()
+        showError('Gagal Menyimpan', err.error || 'Gagal menyimpan mahasiswa.')
+      }
+    } catch (err) {
+      showError('Error Koneksi', 'Gagal terhubung ke database server.')
     }
-    students.value.push(newStudent)
-    showSuccess('Mahasiswa Ditambahkan! 🎓', `${newStudent.name} (${newStudent.nim}) berhasil didaftarkan ke sistem.`)
   }
 }
 
@@ -244,7 +260,7 @@ const openEditStudentModal = async (student) => {
       <div style="text-align: left; display: flex; flex-direction: column; gap: 0.65rem; padding: 0.25rem 0.5rem;">
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">NIM Mahasiswa</label>
-          <input id="swal-edit-nim" class="swal2-input" value="${student.nim}" placeholder="Contoh: 221112019" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.88rem;">
+          <input id="swal-edit-nim" class="swal2-input" value="${student.nim}" placeholder="Contoh: 221112019" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.88rem;" readonly>
         </div>
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Nama Lengkap Mahasiswa</label>
@@ -253,26 +269,19 @@ const openEditStudentModal = async (student) => {
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Program Studi</label>
           <select id="swal-edit-prodi" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem; padding: 0.5rem;">
-            <option value="Teknik Informatika (S1)" ${student.prodi.includes('Informatika') ? 'selected' : ''}>Teknik Informatika (S1)</option>
-            <option value="Sistem Informasi (S1)" ${student.prodi.includes('Sistem') ? 'selected' : ''}>Sistem Informasi (S1)</option>
+            <option value="Teknik Informatika (S1)" ${student.prodi && student.prodi.includes('Informatika') ? 'selected' : ''}>Teknik Informatika (S1)</option>
+            <option value="Sistem Informasi (S1)" ${student.prodi && student.prodi.includes('Sistem') ? 'selected' : ''}>Sistem Informasi (S1)</option>
           </select>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Email Kampus</label>
-            <input id="swal-edit-email" class="swal2-input" value="${student.email}" placeholder="Email Kampus" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem;">
+            <input id="swal-edit-email" class="swal2-input" value="${student.email || ''}" placeholder="Email Kampus" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem;">
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">No. WhatsApp</label>
-            <input id="swal-edit-phone" class="swal2-input" value="${student.phone}" placeholder="Contoh: 62812345678" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem;">
+            <input id="swal-edit-phone" class="swal2-input" value="${student.phone || ''}" placeholder="Contoh: 62812345678" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem;">
           </div>
-        </div>
-        <div>
-          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 0.25rem;">Status Akademik</label>
-          <select id="swal-edit-status" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem; padding: 0.5rem;">
-            <option value="Aktif" ${student.status === 'Aktif' ? 'selected' : ''}>Aktif</option>
-            <option value="Cuti" ${student.status === 'Cuti' ? 'selected' : ''}>Cuti</option>
-          </select>
         </div>
       </div>
     `,
@@ -288,19 +297,39 @@ const openEditStudentModal = async (student) => {
       const prodi = document.getElementById('swal-edit-prodi').value
       const email = document.getElementById('swal-edit-email').value.trim()
       const phone = document.getElementById('swal-edit-phone').value.trim()
-      const status = document.getElementById('swal-edit-status').value
 
       if (!nim || !name) {
         Swal.showValidationMessage('NIM dan Nama Mahasiswa wajib diisi!')
         return false
       }
-      return { nim, name: name.toUpperCase(), prodi, email, phone, status }
+      return { nim, name: name.toUpperCase(), prodi, email, phone }
     }
   })
 
   if (formValues) {
-    Object.assign(student, formValues)
-    showSuccess('Perubahan Disimpan! 💾', `Data mahasiswa ${student.name} berhasil diperbarui.`)
+    try {
+      const res = await fetch('/api/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formValues.nim,
+          name: formValues.name,
+          prodi: formValues.prodi,
+          email: formValues.email,
+          phone: formValues.phone
+        })
+      })
+
+      if (res.ok) {
+        Object.assign(student, formValues)
+        showSuccess('Perubahan Disimpan! 💾', `Data mahasiswa ${student.name} berhasil diperbarui di database.`)
+        fetchStudents()
+      } else {
+        showError('Gagal Update', 'Terjadi kesalahan saat memperbarui data di database.')
+      }
+    } catch (err) {
+      showError('Error', 'Gagal memperbarui data di database server.')
+    }
   }
 }
 
@@ -312,8 +341,20 @@ const deleteStudent = async (student) => {
     'Ya, Hapus Mahasiswa'
   )
   if (confirmed) {
-    students.value = students.value.filter(s => s.id !== student.id)
-    showSuccess('Mahasiswa Dihapus 🗑️', `Data ${student.name} berhasil dihapus dari sistem.`)
+    try {
+      const res = await fetch(`/api/students?username=${encodeURIComponent(student.nim)}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        students.value = students.value.filter(s => s.id !== student.id && s.nim !== student.nim)
+        showSuccess('Mahasiswa Dihapus 🗑️', `Data ${student.name} berhasil dihapus dari database.`)
+        fetchStudents()
+      } else {
+        showError('Gagal Hapus', 'Gagal menghapus mahasiswa dari database.')
+      }
+    } catch (err) {
+      showError('Error', 'Gagal terhubung ke database server.')
+    }
   }
 }
 </script>

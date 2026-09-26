@@ -153,12 +153,14 @@ const studentNavMain = computed(() => [
 ])
 
 const studentNavCourses = computed(() => {
-  return courses.value.map(c => ({
-    name: c.name,
-    code: c.code,
-    path: `/course/${c.id}`,
-    icon: (c.name.toLowerCase().includes('web') || c.id.includes('web')) ? Code : BookOpen
-  }))
+  return courses.value
+    .filter(c => c.status !== 'Non Aktif')
+    .map(c => ({
+      name: c.name,
+      code: c.code,
+      path: `/course/${c.id}`,
+      icon: (c.name.toLowerCase().includes('web') || c.id.includes('web')) ? Code : BookOpen
+    }))
 })
 
 const studentNavAcad = computed(() => [

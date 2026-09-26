@@ -19,6 +19,7 @@ const newCourseSemester = ref('Ganjil 2026/2027')
 const newCourseClassTime = ref('Senin, 08.00 - 10.30 WIB')
 const newCourseRoom = ref('Lab Komputer / Hybrid Zoom')
 const newCourseDescription = ref('')
+const newCourseStatus = ref('Aktif')
 
 // Modal & Form Fields for Editing Course
 const showEditCourseModal = ref(false)
@@ -31,7 +32,8 @@ const editCourseForm = ref({
   semester: '',
   class_time: '',
   room: '',
-  description: ''
+  description: '',
+  status: 'Aktif'
 })
 
 const fetchCourses = async () => {
@@ -48,6 +50,30 @@ const fetchCourses = async () => {
 onMounted(() => {
   fetchCourses()
 })
+
+const toggleCourseStatus = async (c) => {
+  const newStatus = c.status === 'Non Aktif' ? 'Aktif' : 'Non Aktif'
+  try {
+    const res = await fetch('/api/courses', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...c, status: newStatus })
+    })
+
+    if (res.ok) {
+      showSuccess(
+        `Status Diubah! ${newStatus === 'Aktif' ? '🟢' : '🔴'}`,
+        `Mata kuliah '${c.name}' sekarang berstatus ${newStatus}.`
+      )
+      window.dispatchEvent(new Event('course-changed'))
+      fetchCourses()
+    } else {
+      showError('Gagal!', 'Gagal memperbarui status mata kuliah!')
+    }
+  } catch (err) {
+    showError('Error', 'Terjadi kesalahan saat mengubah status.')
+  }
+}
 
 const createCourse = async () => {
   if (!newCourseCode.value || !newCourseName.value) {
@@ -66,7 +92,8 @@ const createCourse = async () => {
         semester: newCourseSemester.value,
         class_time: newCourseClassTime.value,
         room: newCourseRoom.value,
-        description: newCourseDescription.value
+        description: newCourseDescription.value,
+        status: newCourseStatus.value
       })
     })
 
@@ -75,6 +102,7 @@ const createCourse = async () => {
       newCourseCode.value = ''
       newCourseName.value = ''
       newCourseDescription.value = ''
+      newCourseStatus.value = 'Aktif'
       window.dispatchEvent(new Event('course-changed'))
       fetchCourses()
     }
@@ -93,7 +121,8 @@ const openEditCourseModal = (c) => {
     semester: c.semester || 'Ganjil 2026/2027',
     class_time: c.class_time || '',
     room: c.room || '',
-    description: c.description || ''
+    description: c.description || '',
+    status: c.status || 'Aktif'
   }
   showEditCourseModal.value = true
 }
@@ -206,7 +235,19 @@ const resetCourses = async () => {
                 <span class="badge badge-gold">{{ c.code }}</span>
                 <span class="badge badge-blue">{{ c.sks }} SKS</span>
               </div>
-              <span class="status-pill-active">Aktif</span>
+              <div class="status-action-group">
+                <span :class="c.status === 'Non Aktif' ? 'status-pill-inactive' : 'status-pill-active'">
+                  {{ c.status || 'Aktif' }}
+                </span>
+                <button 
+                  @click="toggleCourseStatus(c)" 
+                  class="btn-toggle-quick" 
+                  :class="c.status === 'Non Aktif' ? 'btn-quick-activate' : 'btn-quick-deactivate'"
+                  :title="c.status === 'Non Aktif' ? 'Klik untuk Mengaktifkan' : 'Klik untuk Menonaktifkan'"
+                >
+                  {{ c.status === 'Non Aktif' ? '⚡ Aktifkan' : '🔒 Nonaktifkan' }}
+                </button>
+              </div>
             </div>
 
             <!-- Content Body -->
@@ -299,6 +340,14 @@ const resetCourses = async () => {
           </div>
 
           <div>
+            <label class="input-label">Status Publikasi Mata Kuliah *</label>
+            <select v-model="newCourseStatus" class="glass-input">
+              <option value="Aktif">🟢 Aktif (Tampil di Mahasiswa & Kuis)</option>
+              <option value="Non Aktif">🔴 Non-Aktif (Sembunyikan dari Mahasiswa)</option>
+            </select>
+          </div>
+
+          <div>
             <label class="input-label">Deskripsi & Silabus Mata Kuliah</label>
             <textarea v-model="newCourseDescription" class="glass-input textarea" placeholder="Jelaskan fokus materi dan silabus pembelajaran..."></textarea>
           </div>
@@ -320,7 +369,7 @@ const resetCourses = async () => {
               <Edit3 class="modal-title-icon text-gold" />
               <div>
                 <h3>Edit Data Mata Kuliah</h3>
-                <p class="modal-sub">Ubah Kode, Nama, SKS, Jadwal, Ruangan, dan Deskripsi Mata Kuliah</p>
+                <p class="modal-sub">Ubah Kode, Nama, SKS, Status, Jadwal, Ruangan, dan Deskripsi</p>
               </div>
             </div>
             <button @click="showEditCourseModal = false" class="btn-close-modal">✕</button>
@@ -338,9 +387,18 @@ const resetCourses = async () => {
               </div>
             </div>
 
-            <div>
-              <label class="input-label">Nama Mata Kuliah *</label>
-              <input v-model="editCourseForm.name" class="glass-input" required placeholder="Contoh: Rekayasa Perangkat Lunak" />
+            <div class="form-row">
+              <div>
+                <label class="input-label">Nama Mata Kuliah *</label>
+                <input v-model="editCourseForm.name" class="glass-input" required placeholder="Contoh: Rekayasa Perangkat Lunak" />
+              </div>
+              <div>
+                <label class="input-label">Status Publikasi *</label>
+                <select v-model="editCourseForm.status" class="glass-input">
+                  <option value="Aktif">🟢 Aktif (Tampil di Mahasiswa & Kuis)</option>
+                  <option value="Non Aktif">🔴 Non-Aktif (Sembunyikan dari Mahasiswa)</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-row">
@@ -514,6 +572,12 @@ const resetCourses = async () => {
   flex-wrap: nowrap;
 }
 
+.status-action-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .status-pill-active {
   font-size: 0.7rem;
   font-weight: 800;
@@ -525,6 +589,51 @@ const resetCourses = async () => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
+}
+
+.status-pill-inactive {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.btn-toggle-quick {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-quick-activate {
+  background: #16a34a;
+  color: white;
+}
+
+.btn-quick-activate:hover {
+  background: #15803d;
+}
+
+.btn-quick-deactivate {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-quick-deactivate:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
 .crs-body {

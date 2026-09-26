@@ -59,21 +59,81 @@ func InitStore() {
 			{
 				ID:        "usr-std-1",
 				Username:  "20260801001",
-				Name:      "Ahmad Fauzi",
+				Name:      "AHMAD FAUZI",
 				Role:      "mahasiswa",
 				Password:  "123456",
 				Email:     "ahmad.fauzi@student.swadharma.ac.id",
-				Prodi:     "Teknik Informatika",
+				Prodi:     "Teknik Informatika (S1)",
 				CreatedAt: time.Now(),
 			},
 			{
 				ID:        "usr-std-2",
 				Username:  "20260801002",
-				Name:      "Siti Nurhaliza",
+				Name:      "SITI NURHALIZA",
 				Role:      "mahasiswa",
 				Password:  "123456",
 				Email:     "siti.nurhaliza@student.swadharma.ac.id",
-				Prodi:     "Sistem Informasi",
+				Prodi:     "Sistem Informasi (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-3",
+				Username:  "221112019",
+				Name:      "LINTANG ANGEL STEFANI",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "lintang.angel@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-4",
+				Username:  "221112020",
+				Name:      "IGNATION SENSEKO MANGGUR",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "ignation.senseko@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-5",
+				Username:  "231112028",
+				Name:      "FAIZ IJLAL ARAYYAN",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "faiz.ijlal@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-6",
+				Username:  "241112001",
+				Name:      "ALDINUS NDRURU",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "aldinus.ndruru@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-7",
+				Username:  "241112002",
+				Name:      "OVAROLDUS SUPRATMAN",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "ovaroldus.s@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
+				CreatedAt: time.Now(),
+			},
+			{
+				ID:        "usr-std-8",
+				Username:  "241112003",
+				Name:      "RADEN DHAFA ADHITYA SOSIAWAN",
+				Role:      "mahasiswa",
+				Password:  "123456",
+				Email:     "raden.dhafa@swadharma.ac.id",
+				Prodi:     "Teknik Informatika (S1)",
 				CreatedAt: time.Now(),
 			},
 		},
@@ -108,6 +168,7 @@ func InitStore() {
 				ClassTime:     "Senin, 08.00 - 10.30 WIB",
 				Room:          "Lab Komputer 2 / Hybrid Zoom",
 				TotalStudents: 38,
+				Status:        "Aktif",
 				Description:   "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian & pemeliharaan perangkat lunak.",
 				Syllabus: []string{
 					"Pengantar Rekayasa Perangkat Lunak & Evolution of Software",
@@ -136,6 +197,7 @@ func InitStore() {
 				ClassTime:     "Rabu, 08.00 - 10.30 WIB",
 				Room:          "Lab Pemrograman Web / Modern Studio",
 				TotalStudents: 42,
+				Status:        "Aktif",
 				Description:   "Mata kuliah praktikum & teori pengembangan aplikasi web modern modern frontend & backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
 				Syllabus: []string{
 					"Pengantar Arsitektur Web & Protokol HTTP/HTTPS",
@@ -376,6 +438,11 @@ func (ds *DataStore) loadFromDisk() bool {
 		}
 	}
 	if len(dump.Courses) > 0 {
+		for i := range dump.Courses {
+			if dump.Courses[i].Status == "" {
+				dump.Courses[i].Status = "Aktif"
+			}
+		}
 		ds.Courses = dump.Courses
 	}
 	if len(dump.Announcements) > 0 {
@@ -420,6 +487,9 @@ func (ds *DataStore) AddCourse(c models.Course) models.Course {
 	if c.ID == "" {
 		c.ID = "crs-" + time.Now().Format("20060102150405")
 	}
+	if c.Status == "" {
+		c.Status = "Aktif"
+	}
 	if len(c.Modules) == 0 {
 		c.Modules = generateDefaultModules(c.Name)
 	}
@@ -453,6 +523,9 @@ func (ds *DataStore) UpdateCourse(c models.Course) bool {
 			}
 			if c.Description != "" {
 				ds.Courses[i].Description = c.Description
+			}
+			if c.Status != "" {
+				ds.Courses[i].Status = c.Status
 			}
 			ds.saveToDiskLocked()
 			return true
@@ -488,6 +561,7 @@ func (ds *DataStore) ResetCourses() []models.Course {
 			ClassTime:     "Senin, 08.00 - 10.30 WIB",
 			Room:          "Lab Komputer 2 / Hybrid Zoom",
 			TotalStudents: 38,
+			Status:        "Aktif",
 			Description:   "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian & pemeliharaan perangkat lunak.",
 			Syllabus: []string{
 				"Pengantar Rekayasa Perangkat Lunak & Evolution of Software",
@@ -516,6 +590,7 @@ func (ds *DataStore) ResetCourses() []models.Course {
 			ClassTime:     "Rabu, 08.00 - 10.30 WIB",
 			Room:          "Lab Pemrograman Web / Modern Studio",
 			TotalStudents: 42,
+			Status:        "Aktif",
 			Description:   "Mata kuliah praktikum & teori pengembangan aplikasi web modern modern frontend & backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
 			Syllabus: []string{
 				"Pengantar Arsitektur Web & Protokol HTTP/HTTPS",
@@ -585,6 +660,45 @@ func (ds *DataStore) GetStudents() []models.User {
 		}
 	}
 	return students
+}
+
+func (ds *DataStore) UpdateStudent(u models.User) (models.User, error) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+
+	for i, existing := range ds.Users {
+		if existing.Username == u.Username || existing.ID == u.ID {
+			if u.Name != "" {
+				ds.Users[i].Name = u.Name
+			}
+			if u.Prodi != "" {
+				ds.Users[i].Prodi = u.Prodi
+			}
+			if u.Email != "" {
+				ds.Users[i].Email = u.Email
+			}
+			if u.Phone != "" {
+				ds.Users[i].Phone = u.Phone
+			}
+			ds.saveToDiskLocked()
+			return ds.Users[i], nil
+		}
+	}
+	return models.User{}, errors.New("Mahasiswa tidak ditemukan")
+}
+
+func (ds *DataStore) DeleteStudent(username string) error {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+
+	for i, existing := range ds.Users {
+		if (existing.Username == username || existing.ID == username) && existing.Role == "mahasiswa" {
+			ds.Users = append(ds.Users[:i], ds.Users[i+1:]...)
+			ds.saveToDiskLocked()
+			return nil
+		}
+	}
+	return errors.New("Mahasiswa tidak ditemukan")
 }
 
 func generateDefaultModules(courseName string) []models.Module {
