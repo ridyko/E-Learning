@@ -391,6 +391,23 @@ const isMeetingActive = (mNo) => {
   return ['Hadir', 'Izin', 'Sakit', 'Absen'].includes(status)
 }
 
+// Get the latest active meeting number from course modules
+const currentActiveMeetingNo = computed(() => {
+  const thisCourse = courses.value.find(c => c.id === selectedCourse.value)
+  if (!thisCourse || !thisCourse.modules) return 1
+  const activeModules = thisCourse.modules.filter(m => m.is_active || m.status === 'terbuka')
+  if (activeModules.length === 0) return 1
+  const maxActive = Math.max(...activeModules.map(m => m.meeting_number))
+  return maxActive
+})
+
+// Generate meeting date for a given meeting number
+const getMeetingDateLabel = (mNo) => {
+  const startDate = new Date('2026-09-15')
+  const mDate = new Date(startDate.getTime() + (mNo - 1) * 7 * 24 * 60 * 60 * 1000)
+  return mDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 const getMeetingTopic = (courseId, mNo) => {
   if (!isMeetingActive(mNo)) {
     return '—'
@@ -439,7 +456,6 @@ const getStudentMeetingRecord = (mNo) => {
 const getStudentMeetingStatus = (mNo) => {
   const rec = getStudentMeetingRecord(mNo)
   if (rec && rec.status) return rec.status
-  if (mNo === 1) return 'Hadir'
   return 'Belum Mulai'
 }
 
@@ -448,7 +464,6 @@ const getStudentMeetingTime = (mNo) => {
   if (rec && rec.check_in_time) {
     return new Date(rec.check_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
   }
-  if (mNo === 1) return '08.00 WIB'
   return '—'
 }
 
@@ -484,11 +499,15 @@ const myAttendancePercentage = computed(() => {
 })
 
 const openSelfScanModal = async () => {
+  const activeMeetingNo = currentActiveMeetingNo.value
   const { value: tokenCode } = await Swal.fire({
     title: '📱 Scan QR / Input Kode Token Presensi',
     html: `
-      <div style="text-align: left; font-size: 0.88rem; color: #475569; margin-bottom: 0.75rem; font-weight: 600;">
-        Masukkan 4-digit kode token presensi yang ditampilkan Dosen di layar proyektor kelas:
+      <div style="text-align: left; font-size: 0.88rem; color: #475569; margin-bottom: 0.4rem; font-weight: 600;">
+        Pertemuan Aktif: <strong>Pertemuan ${activeMeetingNo}</strong> (${getMeetingDateLabel(activeMeetingNo)})
+      </div>
+      <div style="text-align: left; font-size: 0.88rem; color: #475569; margin-bottom: 0.75rem;">
+        Masukkan kode token presensi yang ditampilkan Dosen di layar proyektor:
       </div>
       <input id="swal-token" class="swal2-input" placeholder="Contoh: 2026 / 8890" style="margin: 0.5rem 0; width: 100%; box-sizing: border-box; text-align: center; font-size: 1.5rem; letter-spacing: 4px; font-weight: 800;" maxlength="6">
     `,
@@ -513,7 +532,7 @@ const openSelfScanModal = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           course_id: selectedCourse.value,
-          meeting_no: 3,
+          meeting_no: activeMeetingNo,
           student_nim: currentUser.value.username,
           student_name: currentUser.value.name,
           status: 'Hadir'
@@ -521,7 +540,7 @@ const openSelfScanModal = async () => {
       })
 
       if (res.ok) {
-        showSuccess('Presensi Berhasil Terverifikasi! 🎉', `Status kehadiran Anda atas nama ${currentUser.value.name} (${currentUser.value.username}) berhasil dicatat sebagai HADIR.`)
+        showSuccess('Presensi Berhasil Terverifikasi! 🎉', `Status kehadiran Anda atas nama ${currentUser.value.name} (${currentUser.value.username}) berhasil dicatat sebagai HADIR untuk Pertemuan ${activeMeetingNo}.`)
         fetchAttendance()
       }
     } catch (err) {
@@ -531,6 +550,11 @@ const openSelfScanModal = async () => {
 }
 
 const openIzinModal = async () => {
+  // Generate all 14 meeting options dynamically
+  const meetingOptions = Array.from({ length: 14 }, (_, i) => i + 1)
+    .map(m => `<option value="${m}">Pertemuan ${m} (${getMeetingDateLabel(m)})</option>`)
+    .join('')
+
   const { value: formValues } = await Swal.fire({
     title: '✉️ Form Pengajuan Surat Izin / Sakit',
     html: `
@@ -538,8 +562,7 @@ const openIzinModal = async () => {
         Pilih Pertemuan & Jenis Keterangan:
       </div>
       <select id="swal-meeting" class="swal2-select" style="margin: 0.5rem 0; width: 100%;">
-        <option value="3">Pertemuan 3 (29 Sep 2026)</option>
-        <option value="4">Pertemuan 4 (06 Okt 2026)</option>
+        ${meetingOptions}
       </select>
       <select id="swal-status" class="swal2-select" style="margin: 0.5rem 0; width: 100%;">
         <option value="Izin">Izin (Keperluan / Acara)</option>
