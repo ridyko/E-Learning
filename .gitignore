@@ -3,8 +3,9 @@ node_modules/
 frontend/node_modules/
 
 # Production builds
-dist/
-# frontend/dist/ (tracked for live server deployment)
+/dist/
+!frontend/dist/
+!frontend/dist/**
 
 # Binaries & Executables
 backend/server
