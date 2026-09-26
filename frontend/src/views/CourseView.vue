@@ -136,11 +136,25 @@ watch(() => route.params.id, () => {
   fetchAssignments()
 })
 
+const studentCount = ref(0)
+const fetchStudentsCount = async () => {
+  try {
+    const res = await fetch('/api/students')
+    if (res.ok) {
+      const list = await res.json()
+      if (list && list.length > 0) {
+        studentCount.value = list.length
+      }
+    }
+  } catch {}
+}
+
 onMounted(() => {
   loadUserData()
   fetchCourse()
   fetchAssignments()
   fetchAllCourses()
+  fetchStudentsCount()
   window.addEventListener('course-changed', fetchAllCourses)
 })
 
@@ -511,7 +525,7 @@ const submitAssignment = async () => {
       <div class="meta-row">
         <span>📅 {{ course.class_time }}</span>
         <span>📍 {{ course.room }}</span>
-        <span>👥 {{ course.total_students }} Mahasiswa</span>
+        <span>👥 {{ studentCount || course.total_students }} Mahasiswa</span>
       </div>
     </div>
 
