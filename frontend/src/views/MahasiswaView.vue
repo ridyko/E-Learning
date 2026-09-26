@@ -149,7 +149,6 @@ const openAddStudentModal = async () => {
           <select id="swal-prodi" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box; font-size: 0.85rem; padding: 0.5rem;">
             <option value="Teknik Informatika (S1)">Teknik Informatika (S1)</option>
             <option value="Sistem Informasi (S1)">Sistem Informasi (S1)</option>
-            <option value="Teknologi Informasi (D3)">Teknologi Informasi (D3)</option>
           </select>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">

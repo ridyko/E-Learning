@@ -149,7 +149,6 @@ const handleRegister = async () => {
             <select v-model="prodi" class="glass-input">
               <option value="Teknik Informatika (S1)">Teknik Informatika (S1)</option>
               <option value="Sistem Informasi (S1)">Sistem Informasi (S1)</option>
-              <option value="Teknologi Informasi (D3)">Teknologi Informasi (D3)</option>
             </select>
           </div>
 
