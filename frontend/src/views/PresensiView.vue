@@ -439,8 +439,7 @@ const getStudentMeetingRecord = (mNo) => {
 const getStudentMeetingStatus = (mNo) => {
   const rec = getStudentMeetingRecord(mNo)
   if (rec && rec.status) return rec.status
-  if (mNo === 1 || mNo === 2) return 'Hadir'
-  if (mNo === 3) return 'Izin'
+  if (mNo === 1) return 'Hadir'
   return 'Belum Mulai'
 }
 
@@ -449,8 +448,7 @@ const getStudentMeetingTime = (mNo) => {
   if (rec && rec.check_in_time) {
     return new Date(rec.check_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
   }
-  if (mNo === 1) return '08.05 WIB'
-  if (mNo === 2) return '08.02 WIB'
+  if (mNo === 1) return '08.00 WIB'
   return '—'
 }
 
@@ -480,7 +478,8 @@ const myAbsenCount = computed(() => {
 })
 
 const myAttendancePercentage = computed(() => {
-  const completedMeetings = 3
+  const completedMeetings = myHadirCount.value + myIzinSakitCount.value + myAbsenCount.value
+  if (completedMeetings === 0) return 100
   return Math.round((myHadirCount.value / completedMeetings) * 100)
 })
 
