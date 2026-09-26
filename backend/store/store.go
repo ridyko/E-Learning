@@ -496,14 +496,10 @@ func (ds *DataStore) seedMySQLIfEmpty() {
 	}
 
 	// 1. Users
-	var userCount int
-	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount)
-	if userCount == 0 && len(ds.Users) > 0 {
-		for _, u := range ds.Users {
-			ds.saveUserMySQL(u)
-		}
-		fmt.Println("[DataStore] Seeded default users into MySQL")
+	for _, u := range ds.Users {
+		ds.saveUserMySQL(u)
 	}
+	fmt.Println("[DataStore] Synced default users into MySQL")
 
 	// 2. Landing Settings
 	var landingCount int
