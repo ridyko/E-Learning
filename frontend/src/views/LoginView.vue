@@ -120,7 +120,7 @@ const handleLogin = async () => {
               v-model="username" 
               class="glass-input with-icon" 
               required 
-              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP / Username' : 'Masukkan NIM (Contoh: 241112001)'"
+              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP / Username' : 'Masukkan NIM (Contoh: 20260801001)'"
             />
           </div>
         </div>

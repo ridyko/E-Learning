@@ -65,14 +65,7 @@ const qrCodeUrl = computed(() => {
 
 // Class Roster / Students List for Dosen View (Default empty status per meeting unless saved)
 const classRoster = ref([
-  { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', prodi: 'Sistem Informasi (S1)', status: '' },
-  { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', prodi: 'Sistem Informasi (S1)', status: '' },
+  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', prodi: 'Teknik Informatika (S1)', status: '' }
 ])
 
 const selectedProdi = ref('ALL') // 'ALL', 'Teknik Informatika (S1)', 'Sistem Informasi (S1)'
@@ -108,51 +101,45 @@ watch([selectedCourse, selectedMeeting], () => {
 })
 
 const fetchStudents = async () => {
+  try {
+    const res = await fetch('/api/students')
+    if (res.ok) {
+      const data = await res.json()
+      if (Array.isArray(data) && data.length > 0) {
+        classRoster.value = data.map(st => ({
+          id: st.id || 'std-' + st.username,
+          name: (st.name || st.username).toUpperCase(),
+          nim: st.username,
+          prodi: st.prodi || 'Teknik Informatika (S1)',
+          status: ''
+        }))
+        loadMeetingAttendance()
+        return
+      }
+    }
+  } catch (err) {
+    console.warn('Fetch students error:', err)
+  }
+
   const local = localStorage.getItem('elearning_students')
   if (local) {
     try {
       const parsed = JSON.parse(local)
-      parsed.forEach(st => {
-        const targetNim = st.nim || st.username
-        const existing = classRoster.value.find(r => r.nim === targetNim)
-        if (existing) {
-          if (st.name) existing.name = st.name.toUpperCase()
-          if (st.prodi) existing.prodi = st.prodi
-        } else {
-          classRoster.value.push({
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const filtered = parsed.filter(s => s.nim === '20260801001' || !['221112019', '221112020', '231112028', '241112001', '241112002', '241112003', '20260801002'].includes(s.nim))
+        classRoster.value = filtered.map(st => {
+          const targetNim = st.nim || st.username
+          return {
             id: st.id || 'std-' + targetNim,
             name: (st.name || targetNim).toUpperCase(),
             nim: targetNim,
             prodi: st.prodi || 'Teknik Informatika (S1)',
             status: ''
-          })
-        }
-      })
+          }
+        })
+        loadMeetingAttendance()
+      }
     } catch {}
-  }
-
-  try {
-    const res = await fetch('/api/students')
-    if (res.ok) {
-      const data = await res.json()
-      data.forEach(st => {
-        const existing = classRoster.value.find(r => r.nim === st.username)
-        if (existing) {
-          if (st.name) existing.name = st.name.toUpperCase()
-          if (st.prodi) existing.prodi = st.prodi
-        } else {
-          classRoster.value.push({
-            id: st.id || 'std-' + st.username,
-            name: (st.name || st.username).toUpperCase(),
-            nim: st.username,
-            prodi: st.prodi || 'Teknik Informatika (S1)',
-            status: ''
-          })
-        }
-      })
-    }
-  } catch (err) {
-    console.warn('Fetch students error:', err)
   }
 }
 

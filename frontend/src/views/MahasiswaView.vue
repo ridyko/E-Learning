@@ -21,84 +21,14 @@ import Swal, { showSuccess, showError, showConfirm } from '../utils/swal.js'
 // Student Data List
 const students = ref([
   {
-    id: 'std-1',
-    nim: '221112019',
-    name: 'LINTANG ANGEL STEFANI',
-    prodi: 'Teknik Informatika (S1)',
-    status: 'Aktif',
-    email: 'lintang.angel@swadharma.ac.id',
-    phone: '6281234567890',
-    ipk: '3.75'
-  },
-  {
-    id: 'std-2',
-    nim: '221112020',
-    name: 'IGNATION SENSEKO MANGGUR',
-    prodi: 'Teknik Informatika (S1)',
-    status: 'Aktif',
-    email: 'ignation.senseko@swadharma.ac.id',
-    phone: '6281298765432',
-    ipk: '3.60'
-  },
-  {
-    id: 'std-3',
-    nim: '231112028',
-    name: 'FAIZ IJLAL ARAYYAN',
-    prodi: 'Teknik Informatika (S1)',
-    status: 'Aktif',
-    email: 'faiz.ijlal@swadharma.ac.id',
-    phone: '6281311223344',
-    ipk: '3.85'
-  },
-  {
-    id: 'std-4',
-    nim: '241112001',
-    name: 'ALDINUS NDRURU',
-    prodi: 'Sistem Informasi (S1)',
-    status: 'Aktif',
-    email: 'aldinus.ndruru@swadharma.ac.id',
-    phone: '6281344556677',
-    ipk: '3.50'
-  },
-  {
-    id: 'std-5',
-    nim: '241112002',
-    name: 'OVAROLDUS SUPRATMAN',
-    prodi: 'Teknik Informatika (S1)',
-    status: 'Aktif',
-    email: 'ovaroldus.s@swadharma.ac.id',
-    phone: '6281377889900',
-    ipk: '3.65'
-  },
-  {
-    id: 'std-6',
-    nim: '241112003',
-    name: 'RADEN DHAFA ADHITYA SOSIAWAN',
-    prodi: 'Teknik Informatika (S1)',
-    status: 'Aktif',
-    email: 'raden.dhafa@swadharma.ac.id',
-    phone: '6281388990011',
-    ipk: '3.90'
-  },
-  {
     id: 'std-7',
     nim: '20260801001',
     name: 'AHMAD FAUZI',
     prodi: 'Teknik Informatika (S1)',
     status: 'Aktif',
-    email: 'ahmad.fauzi@swadharma.ac.id',
+    email: 'ahmad.fauzi@student.swadharma.ac.id',
     phone: '6281512345678',
     ipk: '3.70'
-  },
-  {
-    id: 'std-8',
-    nim: '20260801002',
-    name: 'SITI NURHALIZA',
-    prodi: 'Sistem Informasi (S1)',
-    status: 'Aktif',
-    email: 'siti.nurhaliza@swadharma.ac.id',
-    phone: '6281698765432',
-    ipk: '3.80'
   }
 ])
 
@@ -136,34 +66,33 @@ const fetchStudents = async () => {
     const res = await fetch('/api/students')
     if (res.ok) {
       const data = await res.json()
-      data.forEach(st => {
-        const existing = students.value.find(s => s.nim === st.username)
-        if (existing) {
-          if (st.name) existing.name = st.name.toUpperCase()
-          if (st.prodi) existing.prodi = st.prodi
-          if (st.email) existing.email = st.email
-          if (st.phone) existing.phone = st.phone
-        } else {
-          students.value.push({
-            id: st.id || 'std-' + st.username,
-            nim: st.username,
-            name: (st.name || st.username).toUpperCase(),
-            prodi: st.prodi || 'Teknik Informatika (S1)',
-            status: 'Aktif',
-            email: st.email || `${st.username.toLowerCase()}@student.swadharma.ac.id`,
-            phone: st.phone || '6281234567890',
-            ipk: '3.70'
-          })
-        }
-      })
-      localStorage.setItem('elearning_students', JSON.stringify(students.value))
+      if (Array.isArray(data) && data.length > 0) {
+        students.value = data.map(st => ({
+          id: st.id || 'std-' + st.username,
+          nim: st.username,
+          name: (st.name || st.username).toUpperCase(),
+          prodi: st.prodi || 'Teknik Informatika (S1)',
+          status: 'Aktif',
+          email: st.email || `${st.username.toLowerCase()}@student.swadharma.ac.id`,
+          phone: st.phone || '-',
+          ipk: '3.70'
+        }))
+        localStorage.setItem('elearning_students', JSON.stringify(students.value))
+        return
+      }
     }
   } catch (err) {
     console.warn('Fetch students error:', err)
-    const local = localStorage.getItem('elearning_students')
-    if (local) {
-      try { students.value = JSON.parse(local) } catch {}
-    }
+  }
+
+  const local = localStorage.getItem('elearning_students')
+  if (local) {
+    try {
+      const parsed = JSON.parse(local)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        students.value = parsed.filter(s => s.nim === '20260801001' || !['221112019', '221112020', '231112028', '241112001', '241112002', '241112003', '20260801002'].includes(s.nim))
+      }
+    } catch {}
   }
 }
 

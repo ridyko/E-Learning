@@ -66,76 +66,6 @@ func InitStore() {
 				Prodi:     "Teknik Informatika (S1)",
 				CreatedAt: time.Now(),
 			},
-			{
-				ID:        "usr-std-2",
-				Username:  "20260801002",
-				Name:      "SITI NURHALIZA",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "siti.nurhaliza@student.swadharma.ac.id",
-				Prodi:     "Sistem Informasi (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-3",
-				Username:  "221112019",
-				Name:      "LINTANG ANGEL STEFANI",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "lintang.angel@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-4",
-				Username:  "221112020",
-				Name:      "IGNATION SENSEKO MANGGUR",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "ignation.senseko@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-5",
-				Username:  "231112028",
-				Name:      "FAIZ IJLAL ARAYYAN",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "faiz.ijlal@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-6",
-				Username:  "241112001",
-				Name:      "ALDINUS NDRURU",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "aldinus.ndruru@swadharma.ac.id",
-				Prodi:     "Sistem Informasi (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-7",
-				Username:  "241112002",
-				Name:      "OVAROLDUS SUPRATMAN",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "ovaroldus.s@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
-				CreatedAt: time.Now(),
-			},
-			{
-				ID:        "usr-std-8",
-				Username:  "241112003",
-				Name:      "RADEN DHAFA ADHITYA SOSIAWAN",
-				Role:      "mahasiswa",
-				Password:  "123456",
-				Email:     "raden.dhafa@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
-				CreatedAt: time.Now(),
-			},
 		},
 		Profile: models.Profile{
 			Name:        "Rio Widyatmoko",
@@ -258,16 +188,6 @@ func InitStore() {
 				Score:       100.0,
 				TotalScore:  100.0,
 				SubmittedAt: time.Now().Add(-2 * time.Hour),
-			},
-			{
-				ID:          "sub-2",
-				QuizID:      "quiz-webdev-1",
-				StudentNIM:  "20260801002",
-				StudentName: "Siti Nurhaliza",
-				Answers:     map[int]int{1: 2, 2: 1, 3: 1, 4: 1, 5: 0},
-				Score:       100.0,
-				TotalScore:  100.0,
-				SubmittedAt: time.Now().Add(-5 * time.Hour),
 			},
 		},
 		Assignments: []models.Assignment{
@@ -499,7 +419,12 @@ func (ds *DataStore) seedMySQLIfEmpty() {
 	for _, u := range ds.Users {
 		ds.saveUserMySQL(u)
 	}
-	fmt.Println("[DataStore] Synced default users into MySQL")
+	// Clean up dummy students from MySQL, keeping only 20260801001 and dosen accounts
+	_, _ = ds.SQLDB.Exec("DELETE FROM users WHERE role = 'mahasiswa' AND username != '20260801001'")
+	_, _ = ds.SQLDB.Exec("DELETE FROM attendances WHERE student_nim != '20260801001'")
+	_, _ = ds.SQLDB.Exec("DELETE FROM assignments WHERE student_nim != '20260801001'")
+	_, _ = ds.SQLDB.Exec("DELETE FROM quiz_submissions WHERE student_nim != '20260801001'")
+	fmt.Println("[DataStore] Synced default users and cleaned dummy students in MySQL")
 
 	// 2. Landing Settings
 	var landingCount int
