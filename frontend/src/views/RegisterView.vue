@@ -125,7 +125,7 @@ const handleRegister = async () => {
                 type="email"
                 class="glass-input with-icon" 
                 required 
-                placeholder="nama@student.swadharma.ac.id"
+                placeholder="Contoh: nama@gmail.com / student@swadharma.ac.id"
               />
             </div>
           </div>
