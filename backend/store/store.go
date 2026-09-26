@@ -94,11 +94,11 @@ func InitStore() {
 				ID:            "rpl-2026",
 				Code:          "TIF-301",
 				Name:          "Rekayasa Perangkat Lunak",
-				SKS:           3,
+				SKS:           4,
 				Semester:      "Ganjil 2026/2027",
-				ClassTime:     "Senin, 08.00 - 10.30 WIB",
-				Room:          "Lab Komputer 2 / Hybrid Zoom",
-				TotalStudents: 8,
+				ClassTime:     "Rabu, 18.00 - 21.20 WIB",
+				Room:          "Ruang 402",
+				TotalStudents: 1,
 				Status:        "Aktif",
 				Description:   "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian & pemeliharaan perangkat lunak.",
 				Syllabus: []string{
@@ -123,11 +123,11 @@ func InitStore() {
 				ID:            "webdev-2026",
 				Code:          "TIF-302",
 				Name:          "Pemrograman Web",
-				SKS:           3,
+				SKS:           4,
 				Semester:      "Ganjil 2026/2027",
-				ClassTime:     "Rabu, 08.00 - 10.30 WIB",
+				ClassTime:     "Senin, 18.00 - 21.20 WIB",
 				Room:          "Lab Pemrograman Web / Modern Studio",
-				TotalStudents: 8,
+				TotalStudents: 1,
 				Status:        "Aktif",
 				Description:   "Mata kuliah praktikum & teori pengembangan aplikasi web modern modern frontend & backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
 				Syllabus: []string{
@@ -157,25 +157,7 @@ func InitStore() {
 				CourseID:  "all",
 				Content:   "Selamat datang mahasiswa ITB Swadharma! Portal ini digunakan untuk mengakses materi kuliah Rekayasa Perangkat Lunak dan Pemrograman Web, pengumpulan tugas, kuis online, serta informasi presensi. Harap cek silabus dan kuis mingguan.",
 				CreatedAt: time.Now().Add(-48 * time.Hour),
-				Author:    "Rio Widyatmoko, S.Kom, M.M.S.I",
-			},
-			{
-				ID:        "ann-2",
-				Title:     "Tugas 1 Pemrograman Web: Membuat Layout Responsive dengan Flexbox/Grid",
-				Category:  "Tugas",
-				CourseID:  "webdev-2026",
-				Content:   "Tugas 1 Pemrograman Web sudah dapat dikumpulkan melalui menu Tugas. Batas waktu pengumpulan adalah hari Minggu pukul 23.59 WIB. Silakan gunakan Live Code Playground di portal ini untuk menguji kode Anda.",
-				CreatedAt: time.Now().Add(-24 * time.Hour),
-				Author:    "Rio Widyatmoko, S.Kom, M.M.S.I",
-			},
-			{
-				ID:        "ann-3",
-				Title:     "Kuis 1 Rekayasa Perangkat Lunak: Model Proses Perangkat Lunak & SDLC",
-				Category:  "Kuis",
-				CourseID:  "rpl-2026",
-				Content:   "Kuis 1 untuk mata kuliah Rekayasa Perangkat Lunak telah dibuka. Kuis terdiri dari 5 soal pilihan ganda dengan durasi 15 menit. Selamat mengerjakan!",
-				CreatedAt: time.Now().Add(-12 * time.Hour),
-				Author:    "Rio Widyatmoko, S.Kom, M.M.S.I",
+				Author:    "Rio Widyatmoko",
 			},
 		},
 		Quizzes: generateQuizzes(),
@@ -456,7 +438,7 @@ func (ds *DataStore) seedMySQLIfEmpty() {
 	// 5. Announcements
 	var annCount int
 	_ = ds.SQLDB.QueryRow("SELECT COUNT(*) FROM announcements").Scan(&annCount)
-	if annCount == 0 && len(ds.Announcements) > 0 {
+	if annCount == 0 && courseCount == 0 && len(ds.Announcements) > 0 {
 		for _, a := range ds.Announcements {
 			ds.saveAnnouncementMySQL(a)
 		}
@@ -619,9 +601,7 @@ func (ds *DataStore) loadFromMySQL() {
 			loaded = append(loaded, a)
 		}
 		rowsA.Close()
-		if len(loaded) > 0 {
-			ds.Announcements = loaded
-		}
+		ds.Announcements = loaded
 	}
 
 	// 6. Quizzes
@@ -1096,11 +1076,11 @@ func (ds *DataStore) ResetCourses() []models.Course {
 			ID:            "rpl-2026",
 			Code:          "TIF-301",
 			Name:          "Rekayasa Perangkat Lunak",
-			SKS:           3,
+			SKS:           4,
 			Semester:      "Ganjil 2026/2027",
-			ClassTime:     "Senin, 08.00 - 10.30 WIB",
-			Room:          "Lab Komputer 2 / Hybrid Zoom",
-			TotalStudents: 38,
+			ClassTime:     "Rabu, 18.00 - 21.20 WIB",
+			Room:          "Ruang 402",
+			TotalStudents: 1,
 			Status:        "Aktif",
 			Description:   "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian & pemeliharaan perangkat lunak.",
 			Syllabus: []string{
@@ -1125,11 +1105,11 @@ func (ds *DataStore) ResetCourses() []models.Course {
 			ID:            "webdev-2026",
 			Code:          "TIF-302",
 			Name:          "Pemrograman Web",
-			SKS:           3,
+			SKS:           4,
 			Semester:      "Ganjil 2026/2027",
-			ClassTime:     "Rabu, 08.00 - 10.30 WIB",
+			ClassTime:     "Senin, 18.00 - 21.20 WIB",
 			Room:          "Lab Pemrograman Web / Modern Studio",
-			TotalStudents: 42,
+			TotalStudents: 1,
 			Status:        "Aktif",
 			Description:   "Mata kuliah praktikum & teori pengembangan aplikasi web modern modern frontend & backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
 			Syllabus: []string{
