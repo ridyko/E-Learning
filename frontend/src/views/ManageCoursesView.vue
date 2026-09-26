@@ -235,19 +235,26 @@ const resetCourses = async () => {
                 <span class="badge badge-gold">{{ c.code }}</span>
                 <span class="badge badge-blue">{{ c.sks }} SKS</span>
               </div>
-              <div class="status-action-group">
-                <span :class="c.status === 'Non Aktif' ? 'status-pill-inactive' : 'status-pill-active'">
-                  {{ c.status || 'Aktif' }}
-                </span>
+              <div class="status-action-box">
+                <div :class="['status-pill-full', c.status === 'Non Aktif' ? 'pill-inactive' : 'pill-active']">
+                  <span class="status-dot"></span>
+                  <span class="status-text-label">Status: <strong>{{ c.status === 'Non Aktif' ? 'NON-AKTIF' : 'AKTIF' }}</strong></span>
+                </div>
                 <button 
                   @click="toggleCourseStatus(c)" 
                   class="btn-toggle-quick" 
                   :class="c.status === 'Non Aktif' ? 'btn-quick-activate' : 'btn-quick-deactivate'"
-                  :title="c.status === 'Non Aktif' ? 'Klik untuk Mengaktifkan' : 'Klik untuk Menonaktifkan'"
+                  :title="c.status === 'Non Aktif' ? 'Klik untuk Mengaktifkan Mata Kuliah' : 'Klik untuk Menonaktifkan Mata Kuliah'"
                 >
-                  {{ c.status === 'Non Aktif' ? '⚡ Aktifkan' : '🔒 Nonaktifkan' }}
+                  <span>{{ c.status === 'Non Aktif' ? '⚡ Ubah ke Aktif' : '🔒 Ubah ke Non-Aktif' }}</span>
                 </button>
               </div>
+            </div>
+
+            <!-- Visibility Notice Box -->
+            <div :class="['visibility-notice-box', c.status === 'Non Aktif' ? 'notice-off' : 'notice-on']">
+              <span v-if="c.status === 'Non Aktif'">🔴 <strong>Status Non-Aktif:</strong> Sembunyi dari Mahasiswa (Kuis & Modul Terunci)</span>
+              <span v-else>🟢 <strong>Status Aktif:</strong> Tampak di Mahasiswa (Kuis & Modul Dapat Diakses)</span>
             </div>
 
             <!-- Content Body -->
@@ -572,47 +579,82 @@ const resetCourses = async () => {
   flex-wrap: nowrap;
 }
 
-.status-action-group {
+.status-action-box {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
-.status-pill-active {
-  font-size: 0.7rem;
-  font-weight: 800;
+.status-pill-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.status-pill-full.pill-active {
   color: #15803d;
   background: #dcfce7;
-  border: 1px solid #86efac;
-  padding: 0.2rem 0.6rem;
-  border-radius: 99px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
+  border: 1.5px solid #86efac;
 }
 
-.status-pill-inactive {
-  font-size: 0.7rem;
-  font-weight: 800;
+.status-pill-full.pill-inactive {
   color: #b91c1c;
   background: #fee2e2;
-  border: 1px solid #fca5a5;
-  padding: 0.2rem 0.6rem;
-  border-radius: 99px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
+  border: 1.5px solid #fca5a5;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pill-active .status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.pill-inactive .status-dot {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.visibility-notice-box {
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.visibility-notice-box.notice-on {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.visibility-notice-box.notice-off {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
 }
 
 .btn-toggle-quick {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 0.2rem 0.55rem;
-  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 7px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .btn-quick-activate {
@@ -625,7 +667,7 @@ const resetCourses = async () => {
 }
 
 .btn-quick-deactivate {
-  background: #f1f5f9;
+  background: #ffffff;
   color: #475569;
   border: 1px solid #cbd5e1;
 }
