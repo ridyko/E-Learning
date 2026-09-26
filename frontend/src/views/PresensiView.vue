@@ -386,9 +386,13 @@ const submitStudentCheckIn = async () => {
 }
 
 // Mahasiswa Personal Presensi Helpers
-const getMeetingTopic = (courseId, mNo) => {
+const isMeetingActive = (mNo) => {
   const status = getStudentMeetingStatus(mNo)
-  if (status === 'Belum Mulai' || status === 'Non Aktif') {
+  return ['Hadir', 'Izin', 'Sakit', 'Absen'].includes(status)
+}
+
+const getMeetingTopic = (courseId, mNo) => {
+  if (!isMeetingActive(mNo)) {
     return '—'
   }
 
@@ -434,7 +438,7 @@ const getStudentMeetingRecord = (mNo) => {
 
 const getStudentMeetingStatus = (mNo) => {
   const rec = getStudentMeetingRecord(mNo)
-  if (rec) return rec.status
+  if (rec && rec.status) return rec.status
   if (mNo === 1 || mNo === 2) return 'Hadir'
   if (mNo === 3) return 'Izin'
   return 'Belum Mulai'
@@ -701,7 +705,7 @@ const openIzinModal = async () => {
                 <td>
                   <div class="topic-info">
                     <span class="topic-title">
-                      <template v-if="getMeetingTopic(selectedCourse, m) !== '—'">
+                      <template v-if="isMeetingActive(m)">
                         Pertemuan {{ m }}: {{ getMeetingTopic(selectedCourse, m) }}
                       </template>
                       <template v-else>
