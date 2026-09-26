@@ -167,7 +167,7 @@ func InitStore() {
 				Semester:      "Ganjil 2026/2027",
 				ClassTime:     "Senin, 08.00 - 10.30 WIB",
 				Room:          "Lab Komputer 2 / Hybrid Zoom",
-				TotalStudents: 38,
+				TotalStudents: 8,
 				Status:        "Aktif",
 				Description:   "Mata kuliah ini membahas prinsip, metode, dan teknik rekayasa perangkat lunak mulai dari perencanaan sistem, analisis kebutuhan (Software Requirements Specification), pemodelan UML, perancangan arsitektur, pengkodean, hingga pengujian & pemeliharaan perangkat lunak.",
 				Syllabus: []string{
@@ -196,7 +196,7 @@ func InitStore() {
 				Semester:      "Ganjil 2026/2027",
 				ClassTime:     "Rabu, 08.00 - 10.30 WIB",
 				Room:          "Lab Pemrograman Web / Modern Studio",
-				TotalStudents: 42,
+				TotalStudents: 8,
 				Status:        "Aktif",
 				Description:   "Mata kuliah praktikum & teori pengembangan aplikasi web modern modern frontend & backend. Mengajarkan HTML5 Semantic, CSS3 Modern Layout (Flexbox/Grid), JavaScript ES6+, Asynchronous API Client, Backend Integration (Golang/PHP/Node), RESTful API, dan Frontend Framework (Vue.js).",
 				Syllabus: []string{
@@ -1701,14 +1701,40 @@ func (ds *DataStore) UpdateProfile(p models.Profile) {
 func (ds *DataStore) GetCourses() []models.Course {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
-	return ds.Courses
+
+	studentCount := 0
+	for _, u := range ds.Users {
+		if u.Role == "mahasiswa" {
+			studentCount++
+		}
+	}
+
+	courses := make([]models.Course, len(ds.Courses))
+	copy(courses, ds.Courses)
+	for i := range courses {
+		if studentCount > 0 {
+			courses[i].TotalStudents = studentCount
+		}
+	}
+	return courses
 }
 
 func (ds *DataStore) GetCourseByID(id string) (models.Course, bool) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
+
+	studentCount := 0
+	for _, u := range ds.Users {
+		if u.Role == "mahasiswa" {
+			studentCount++
+		}
+	}
+
 	for _, c := range ds.Courses {
 		if c.ID == id {
+			if studentCount > 0 {
+				c.TotalStudents = studentCount
+			}
 			return c, true
 		}
 	}
