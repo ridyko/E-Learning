@@ -59,7 +59,8 @@ const isMahasiswa = computed(() => currentUser.value?.role === 'mahasiswa')
 const qrCodeUrl = computed(() => {
   const c = selectedCourse.value || 'rpl-2026'
   const m = selectedMeeting.value || 1
-  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`http://localhost:5173/presensi?checkin=${c}-p${m}`)}`
+  const baseUrl = window.location.origin
+  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`${baseUrl}/presensi?checkin=${c}-p${m}`)}`
 })
 
 // Class Roster / Students List for Dosen View (Default empty status per meeting unless saved)
@@ -67,7 +68,7 @@ const classRoster = ref([
   { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', prodi: 'Teknik Informatika (S1)', status: '' },
   { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', prodi: 'Teknik Informatika (S1)', status: '' },
   { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', prodi: 'Teknik Informatika (S1)', status: '' },
-  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', prodi: 'Teknik Informatika (S1)', status: '' },
+  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', prodi: 'Sistem Informasi (S1)', status: '' },
   { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', prodi: 'Teknik Informatika (S1)', status: '' },
   { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', prodi: 'Teknik Informatika (S1)', status: '' },
   { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', prodi: 'Teknik Informatika (S1)', status: '' },

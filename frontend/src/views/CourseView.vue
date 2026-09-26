@@ -718,7 +718,7 @@ const submitAssignment = async () => {
               <div v-if="isDosen" class="dosen-assignment-view">
                 <div class="dosen-asg-summary">
                   <span class="sub-count-badge">
-                    👥 {{ getMeetingSubmissions(mod.meeting_number).length }} dari {{ course.total_students }} Mahasiswa Sudah Mengumpulkan
+                    👥 {{ getMeetingSubmissions(mod.meeting_number).length }} dari {{ studentCount || course.total_students }} Mahasiswa Sudah Mengumpulkan
                   </span>
                 </div>
 

@@ -54,7 +54,7 @@ const students = ref([
     id: 'std-4',
     nim: '241112001',
     name: 'ALDINUS NDRURU',
-    prodi: 'Teknik Informatika (S1)',
+    prodi: 'Sistem Informasi (S1)',
     status: 'Aktif',
     email: 'aldinus.ndruru@swadharma.ac.id',
     phone: '6281344556677',

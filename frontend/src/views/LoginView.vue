@@ -100,10 +100,19 @@ const handleLogin = async () => {
         ❌ {{ errorMsg }}
       </div>
 
+      <!-- Student Login Hint -->
+      <div v-if="activeTab === 'mahasiswa'" class="student-login-hint">
+        <AlertCircle class="hint-icon" />
+        <div class="hint-text">
+          <strong>Petunjuk Login Mahasiswa:</strong>
+          <p>Gunakan <strong>NIM</strong> Anda sebagai username. Password awal: <code>123456</code> (atau password pendaftaran mandiri Anda).</p>
+        </div>
+      </div>
+
       <form @submit.prevent="handleLogin" class="login-form">
         <div>
           <label class="input-label">
-            {{ activeTab === 'dosen' ? 'NIP Dosen' : 'NIM Mahasiswa' }}
+            {{ activeTab === 'dosen' ? 'NIP / Username Dosen' : 'NIM Mahasiswa' }}
           </label>
           <div class="input-wrapper">
             <User class="field-icon" />
@@ -111,7 +120,7 @@ const handleLogin = async () => {
               v-model="username" 
               class="glass-input with-icon" 
               required 
-              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP Dosen' : 'Masukkan NIM Mahasiswa'"
+              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP / Username' : 'Masukkan NIM (Contoh: 241112001)'"
             />
           </div>
         </div>
@@ -125,7 +134,7 @@ const handleLogin = async () => {
               type="password" 
               class="glass-input with-icon" 
               required 
-              placeholder="Masukkan password"
+              :placeholder="activeTab === 'dosen' ? 'Masukkan password akun dosen' : 'Password (Default: 123456)'"
             />
           </div>
         </div>
@@ -332,5 +341,40 @@ code {
 .btn-icon-xs {
   width: 14px;
   height: 14px;
+}
+
+.student-login-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+  color: #1e40af;
+}
+
+.student-login-hint .hint-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: #2563eb;
+  margin-top: 2px;
+}
+
+.student-login-hint .hint-text p {
+  margin: 0.25rem 0 0;
+  color: #3b82f6;
+  line-height: 1.4;
+}
+
+.student-login-hint .hint-text code {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-weight: 700;
 }
 </style>

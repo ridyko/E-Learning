@@ -274,7 +274,13 @@ onMounted(() => {
           <p class="section-subtitle">Silakan pilih mata kuliah untuk mengakses modul pertemuan 1 - 14.</p>
         </div>
 
-        <div class="course-grid">
+        <div v-if="visibleCourses.length === 0" class="glass-card empty-courses-card">
+          <BookOpen class="empty-courses-icon" />
+          <h4>Belum Ada Mata Kuliah Aktif</h4>
+          <p>Mata kuliah semester ini sedang dipersiapkan atau belum diaktifkan oleh Dosen Pengampu.</p>
+        </div>
+
+        <div v-else class="course-grid">
           <div 
             v-for="course in visibleCourses" 
             :key="course.id" 
@@ -807,6 +813,35 @@ onMounted(() => {
 .btn-icon-xs {
   width: 14px;
   height: 14px;
+}
+
+.empty-courses-card {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 1rem;
+}
+
+.empty-courses-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: #94a3b8;
+  margin: 0 auto 1rem;
+}
+
+.empty-courses-card h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+.empty-courses-card p {
+  font-size: 0.95rem;
+  color: #64748b;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {

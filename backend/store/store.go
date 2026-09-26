@@ -113,7 +113,7 @@ func InitStore() {
 				Role:      "mahasiswa",
 				Password:  "123456",
 				Email:     "aldinus.ndruru@swadharma.ac.id",
-				Prodi:     "Teknik Informatika (S1)",
+				Prodi:     "Sistem Informasi (S1)",
 				CreatedAt: time.Now(),
 			},
 			{
