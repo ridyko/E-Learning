@@ -1710,11 +1710,12 @@ func (ds *DataStore) GetCourses() []models.Course {
 	}
 
 	courses := make([]models.Course, len(ds.Courses))
-	copy(courses, ds.Courses)
-	for i := range courses {
+	for i, c := range ds.Courses {
+		cCopy := c
 		if studentCount > 0 {
-			courses[i].TotalStudents = studentCount
+			cCopy.TotalStudents = studentCount
 		}
+		courses[i] = cCopy
 	}
 	return courses
 }
@@ -1732,10 +1733,11 @@ func (ds *DataStore) GetCourseByID(id string) (models.Course, bool) {
 
 	for _, c := range ds.Courses {
 		if c.ID == id {
+			cCopy := c
 			if studentCount > 0 {
-				c.TotalStudents = studentCount
+				cCopy.TotalStudents = studentCount
 			}
-			return c, true
+			return cCopy, true
 		}
 	}
 	return models.Course{}, false
