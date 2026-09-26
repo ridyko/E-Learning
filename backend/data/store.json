@@ -794,10 +794,73 @@
       "id": "att-1",
       "course_id": "rpl-2026",
       "meeting_no": 1,
-      "student_nim": "20260801001",
-      "student_name": "Ahmad Fauzi",
+      "student_nim": "221112019",
+      "student_name": "LINTANG ANGEL STEFANI",
+      "status": "Absen",
+      "check_in_time": "2026-09-25T08:00:00+07:00"
+    },
+    {
+      "id": "att-2",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "221112020",
+      "student_name": "IGNATION SENSEKO MANGGUR",
+      "status": "Absen",
+      "check_in_time": "2026-09-25T08:00:00+07:00"
+    },
+    {
+      "id": "att-3",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "231112028",
+      "student_name": "FAIZ IJLAL ARAYYAN",
       "status": "Hadir",
-      "check_in_time": "2026-09-25T05:35:16.602506+07:00"
+      "check_in_time": "2026-09-25T08:05:00+07:00"
+    },
+    {
+      "id": "att-4",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "241112001",
+      "student_name": "ALDINUS NDRURU",
+      "status": "Hadir",
+      "check_in_time": "2026-09-25T08:03:00+07:00"
+    },
+    {
+      "id": "att-5",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "241112002",
+      "student_name": "OVAROLDUS SUPRATMAN",
+      "status": "Hadir",
+      "check_in_time": "2026-09-25T08:02:00+07:00"
+    },
+    {
+      "id": "att-6",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "241112003",
+      "student_name": "RADEN DHAFA ADHITYA SOSIAWAN",
+      "status": "Hadir",
+      "check_in_time": "2026-09-25T08:01:00+07:00"
+    },
+    {
+      "id": "att-7",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "20260801001",
+      "student_name": "AHMAD FAUZI",
+      "status": "Hadir",
+      "check_in_time": "2026-09-25T08:00:00+07:00"
+    },
+    {
+      "id": "att-8",
+      "course_id": "rpl-2026",
+      "meeting_no": 1,
+      "student_nim": "20260801002",
+      "student_name": "SITI NURHALIZA",
+      "status": "Izin",
+      "check_in_time": "2026-09-25T08:00:00+07:00"
     }
   ]
 }

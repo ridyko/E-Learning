@@ -65,7 +65,7 @@ const repoLink = ref('')
 const studentNotes = ref('')
 const submissionSuccess = ref(false)
 
-// Edit / Upload Module Modal State (For Dosen Pak Rio)
+// Edit / Upload Module Modal State (For Dosen)
 const showEditModuleModal = ref(false)
 const isSavingModule = ref(false)
 const editModuleForm = ref({
@@ -317,7 +317,7 @@ const saveDeadline = async () => {
   }
 }
 
-// Open Edit & Upload Module Modal for Dosen Pak Rio
+// Open Edit & Upload Module Modal for Dosen
 const openEditModuleModal = (mod) => {
   editModuleForm.value = {
     meeting_number: mod.meeting_number,
@@ -406,7 +406,7 @@ const saveModuleContent = async () => {
 // Open Submit Assignment Modal
 const openSubmitModal = (mod) => {
   if (!isModuleUnlocked(mod)) {
-    showWarning('Terkunci! 🔒', 'Modul ini belum dimulai oleh Pak Rio.')
+    showWarning('Terkunci! 🔒', 'Modul ini belum dimulai oleh Dosen.')
     return
   }
   if (isTaskClosed(mod)) {
@@ -442,7 +442,7 @@ const submitAssignment = async () => {
 
     if (res.ok) {
       submissionSuccess.value = true
-      showSuccess('Tugas Terkirim! 🚀', 'Tugas Anda telah berhasil diunggah ke portal Dosen Pak Rio Widyatmoko.')
+      showSuccess('Tugas Terkirim! 🚀', 'Tugas Anda telah berhasil diunggah ke portal Dosen.')
       fetchAssignments()
       setTimeout(() => {
         showAssignmentModal.value = false
@@ -550,7 +550,7 @@ const submitAssignment = async () => {
           v-show="activeMeeting === mod.meeting_number"
           class="glass-card detail-card"
         >
-          <!-- DOSEN CONTROL PANEL BANNER (Only for Dosen Pak Rio) -->
+          <!-- DOSEN CONTROL PANEL BANNER (Only for Dosen) -->
           <div v-if="isDosen" class="dosen-panel-banner">
             <div class="dosen-panel-header">
               <div class="dosen-badge">
@@ -609,7 +609,7 @@ const submitAssignment = async () => {
             <div class="locked-icon-wrapper">
               <Lock class="locked-hero-icon" />
             </div>
-            <h4>Modul Pertemuan Ke-{{ mod.meeting_number }} Ditutup / Belum Dimulai Dosen Pak Rio</h4>
+            <h4>Modul Pertemuan Ke-{{ mod.meeting_number }} Ditutup / Belum Dimulai Dosen</h4>
             <p>
               Materi slide presentation, modul PDF, dan pengumpulan tugas untuk pertemuan ini 
               baru akan dibuka setelah Dosen membuka sesi perkuliahan atau sesuai jadwal otomatis.
@@ -638,7 +638,7 @@ const submitAssignment = async () => {
             <div v-if="mod.code_sample" class="code-box">
               <div class="code-header">
                 <Code class="code-icon" />
-                <span>Contoh Kode Praktikum (Pak Rio)</span>
+                <span>Contoh Kode Praktikum</span>
               </div>
               <pre class="code-block"><code>{{ mod.code_sample }}</code></pre>
             </div>
@@ -751,7 +751,7 @@ const submitAssignment = async () => {
                     <AlertCircle class="st-icon text-rose" />
                     <div>
                       <h5>Pengumpulan Tugas Ditutup 🔴</h5>
-                      <p class="st-desc">Batas waktu pengumpulan telah berakhir pada {{ mod.task_due_date }}. Hubungi Dosen Pak Rio jika memerlukan perpanjangan waktu.</p>
+                      <p class="st-desc">Batas waktu pengumpulan telah berakhir pada {{ mod.task_due_date }}. Hubungi Dosen jika memerlukan perpanjangan waktu.</p>
                     </div>
                   </div>
                   <button disabled class="btn btn-secondary btn-disabled">
@@ -887,7 +887,7 @@ const submitAssignment = async () => {
           </div>
 
           <div v-if="submissionSuccess" class="alert-success">
-            ✅ Tugas berhasil dikirim ke Pak Rio Widyatmoko!
+            ✅ Tugas berhasil dikirim ke Dosen!
           </div>
 
           <form v-else @submit.prevent="submitAssignment" class="modal-form">
@@ -907,7 +907,7 @@ const submitAssignment = async () => {
             </div>
 
             <div class="form-group">
-              <label class="input-label">Catatan Tambahan untuk Pak Rio</label>
+              <label class="input-label">Catatan Tambahan untuk Dosen</label>
               <textarea v-model="studentNotes" class="glass-input textarea" placeholder="Catatan atau kendala pengerjaan..."></textarea>
             </div>
 

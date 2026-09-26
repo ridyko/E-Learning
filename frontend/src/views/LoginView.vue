@@ -8,21 +8,16 @@ const router = useRouter()
 const route = useRoute()
 
 const activeTab = ref('dosen')
-const username = ref('21099001')
-const password = ref('123456')
+const username = ref('')
+const password = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
 
 const setRoleTab = (role) => {
   activeTab.value = role
   errorMsg.value = ''
-  if (role === 'dosen') {
-    username.value = '21099001'
-    password.value = '123456'
-  } else {
-    username.value = '20260801001'
-    password.value = '123456'
-  }
+  username.value = ''
+  password.value = ''
 }
 
 const handleLogin = async () => {
@@ -90,7 +85,7 @@ const handleLogin = async () => {
           :class="['tab-btn', activeTab === 'dosen' ? 'active-dosen' : '']"
         >
           <ShieldCheck class="tab-icon text-gold" />
-          <span>Login Dosen (Pak Rio)</span>
+          <span>Login Dosen</span>
         </button>
         <button 
           @click="setRoleTab('mahasiswa')" 
@@ -99,16 +94,6 @@ const handleLogin = async () => {
           <UserCheck class="tab-icon text-blue" />
           <span>Login Mahasiswa</span>
         </button>
-      </div>
-
-      <div class="info-alert">
-        <AlertCircle class="alert-icon text-gold" />
-        <div v-if="activeTab === 'dosen'">
-          <strong>Login Dosen:</strong> Username: <code>21099001</code> | Password: <code>123456</code>
-        </div>
-        <div v-else>
-          <strong>Login Mahasiswa:</strong> NIM: <code>20260801001</code> | Password Default: <code>123456</code>
-        </div>
       </div>
 
       <div v-if="errorMsg" class="error-alert">
@@ -126,7 +111,7 @@ const handleLogin = async () => {
               v-model="username" 
               class="glass-input with-icon" 
               required 
-              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP (21099001)' : 'Masukkan NIM Anda'"
+              :placeholder="activeTab === 'dosen' ? 'Masukkan NIP Dosen' : 'Masukkan NIM Mahasiswa'"
             />
           </div>
         </div>

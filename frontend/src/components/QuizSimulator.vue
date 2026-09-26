@@ -268,7 +268,7 @@ onUnmounted(() => {
               <AlertCircle class="icon-sm" /> Jawaban Anda: {{ q.options[selectedAnswers[q.id]] || 'Tidak Dijawab' }} | Jawaban Benar: {{ q.options[q.correct_answer] }}
             </span>
           </div>
-          <p class="explanation-box">💡 <strong>Pembahasan Pak Rio:</strong> {{ q.explanation }}</p>
+          <p class="explanation-box">💡 <strong>Pembahasan Dosen:</strong> {{ q.explanation }}</p>
         </div>
       </div>
 

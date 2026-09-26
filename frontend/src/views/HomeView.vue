@@ -157,11 +157,11 @@ onMounted(() => {
               <ShieldCheck class="choice-icon text-gold" />
             </div>
             <h3>Portal Dosen Pengampu</h3>
-            <p>Khusus Dosen (Pak Rio Widyatmoko). Kelola tampilan beranda, pengumuman, modul pertemuan, rekapitulasi tugas masuk, dan absensi mahasiswa.</p>
+            <p>Khusus Dosen Pengampu. Kelola tampilan beranda, pengumuman, modul pertemuan, rekapitulasi tugas masuk, dan absensi mahasiswa.</p>
 
             <router-link to="/login" class="btn btn-gold w-full mt-auto">
               <LogIn class="btn-icon-xs" />
-              <span>Login Dosen Pak Rio</span>
+              <span>Login Dosen</span>
             </router-link>
           </div>
 
@@ -212,7 +212,7 @@ onMounted(() => {
               <CheckSquare class="feature-icon text-blue" />
             </div>
             <h4>Simulator Kuis Online</h4>
-            <p>Kuis pilihan ganda dengan timer countdown, auto-grading instan, serta pembahasan jawaban langsung dari Pak Rio.</p>
+            <p>Kuis pilihan ganda dengan timer countdown, auto-grading instan, serta pembahasan jawaban langsung dari Dosen.</p>
           </div>
 
           <div class="glass-card feature-card">

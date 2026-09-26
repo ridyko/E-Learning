@@ -49,7 +49,7 @@ func main() {
 	// Health check endpoint
 	http.HandleFunc("/api/health", handlers.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"status":"ok", "app":"Portal E-Learning Pak Rio Widyatmoko, S.Kom, M.M.S.I", "institution":"ITB Swadharma"}`)
+		fmt.Fprintf(w, `{"status":"ok", "app":"Portal E-Learning ITB Swadharma", "institution":"ITB Swadharma"}`)
 	}))
 
 	// Serve Static Vue 3 SPA frontend from ../frontend/dist

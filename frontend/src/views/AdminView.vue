@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { showSuccess, showError, showWarning, showConfirm } from '../utils/swal.js'
-import { CheckSquare } from 'lucide-vue-next'
+import { CheckSquare, Zap } from 'lucide-vue-next'
 
 const announcements = ref([])
 const assignments = ref([])
@@ -88,7 +88,7 @@ const addQuizQuestion = async () => {
           question: newQQuestion.value,
           options: [newQOpt0.value, newQOpt1.value, newQOpt2.value, newQOpt3.value],
           correct_answer: parseInt(newQCorrect.value),
-          explanation: newQExplanation.value || 'Pembahasan kunci jawaban oleh Pak Rio.'
+          explanation: newQExplanation.value || 'Pembahasan kunci jawaban oleh Dosen Pengampu.'
         }
       })
     })
@@ -223,7 +223,7 @@ const createAnnouncement = async () => {
     })
 
     if (res.ok) {
-      showSuccess('Pengumuman Diterbitkan! 📢', 'Pengumuman baru berhasil diterbitkan oleh Pak Rio!')
+      showSuccess('Pengumuman Diterbitkan! 📢', 'Pengumuman baru berhasil diterbitkan!')
       newAnnTitle.value = ''
       newAnnContent.value = ''
       fetchData()
@@ -247,18 +247,37 @@ const deleteAnnouncement = async (id) => {
     showError('Gagal!', 'Gagal menghapus pengumuman!')
   }
 }
+const triggerStartServer = async () => {
+  try {
+    const res = await fetch('/start_server.php')
+    const data = await res.json()
+    if (data.status === 'success') {
+      showSuccess('Server Diaktifkan! 🚀', data.message)
+    } else {
+      showSuccess('Status Server 🟢', data.message)
+    }
+  } catch (err) {
+    showError('Gagal!', 'Gagal menghubungi server trigger.')
+  }
+}
 </script>
 
 <template>
   <div class="admin-container animate-fade-in">
     <!-- Admin Header -->
     <div class="page-header">
-      <div class="title-row">
-        <ShieldCheck class="header-icon text-gold" />
-        <div>
-          <h2>Panel Kontrol Dashboard — Pak Rio Widyatmoko, S.Kom, M.M.S.I</h2>
-          <p class="subtitle">NIP: <strong>21099001</strong> — Kelola tampilan Beranda, pengumuman, daftar mahasiswa, rekapitulasi tugas, dan presensi ITB Swadharma.</p>
+      <div class="header-flex">
+        <div class="title-row">
+          <ShieldCheck class="header-icon text-gold" />
+          <div>
+            <h2>Panel Kontrol Dashboard Dosen</h2>
+            <p class="subtitle">Kelola tampilan Beranda, pengumuman, daftar mahasiswa, rekapitulasi tugas, dan presensi ITB Swadharma.</p>
+          </div>
         </div>
+        <button @click="triggerStartServer" class="btn btn-emerald btn-sm btn-server-trigger" title="1-Klik Aktifkan Server Backend Golang">
+          <Zap class="btn-icon-xs" />
+          <span>🚀 Aktifkan / Cek Server Backend</span>
+        </button>
       </div>
     </div>
 
@@ -308,7 +327,7 @@ const deleteAnnouncement = async (id) => {
 
           <div class="form-row">
             <div>
-              <label class="input-label">Nomor WhatsApp Direct Pak Rio</label>
+              <label class="input-label">Nomor WhatsApp Direct Dosen</label>
               <input v-model="landingSettings.phone" class="glass-input" placeholder="+62 812-9876-5432" />
             </div>
             <div>
@@ -418,6 +437,21 @@ const deleteAnnouncement = async (id) => {
 
 .page-header {
   margin-bottom: 2rem;
+}
+
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-server-trigger {
+  padding: 0.65rem 1.25rem;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .title-row {

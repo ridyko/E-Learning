@@ -56,7 +56,7 @@ const htmlCode = ref(`<!DOCTYPE html>
   <div class="card">
     <span class="badge">ITB SWADHARMA</span>
     <h2>Pemrograman Web Live Sandbox</h2>
-    <p>Selamat mencoba Live Playground buatan Pak Rio Widyatmoko, S.Kom, M.M.S.I!</p>
+    <p>Selamat mencoba Live Playground Pemrograman Web!</p>
     <button class="btn" onclick="tambahAngka()">Klik Saya: <span id="counter">0</span></button>
   </div>
 
@@ -156,7 +156,7 @@ const copyCode = () => {
         <Sparkles class="header-icon text-gold" />
         <div>
           <h3>Live Code Sandbox — Pemrograman Web</h3>
-          <p>Dibuat oleh Pak Rio Widyatmoko untuk Praktikum HTML, CSS & JavaScript</p>
+          <p>Praktikum HTML, CSS & JavaScript</p>
         </div>
       </div>
 

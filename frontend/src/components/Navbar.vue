@@ -200,7 +200,7 @@ const dosenAcadLinks = computed(() => [
         <div class="logo-icon"><span>ITB</span></div>
         <div class="brand-text">
           <span class="institution">ITB SWADHARMA</span>
-          <span class="portal-name">E-Learning Pak Rio</span>
+          <span class="portal-name">E-Learning ITB Swadharma</span>
         </div>
       </router-link>
       <div class="auth-buttons">
@@ -228,7 +228,7 @@ const dosenAcadLinks = computed(() => [
       <!-- Center: ITB Brand Logo -->
       <router-link to="/" class="brand-logo-center">
         <div class="logo-icon-sm"><span>ITB</span></div>
-        <span class="portal-name-center">E-Learning Pak Rio</span>
+        <span class="portal-name-center">E-Learning ITB Swadharma</span>
       </router-link>
 
       <!-- Right: User Avatar Circle 'R' with Profile & Logout Dropdown -->
@@ -316,7 +316,7 @@ const dosenAcadLinks = computed(() => [
           <div class="logo-icon"><span>ITB</span></div>
           <div class="brand-text">
             <span class="institution">ITB SWADHARMA</span>
-            <span class="portal-name">E-Learning Pak Rio</span>
+            <span class="portal-name">E-Learning ITB Swadharma</span>
           </div>
         </router-link>
       </div>

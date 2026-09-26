@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { 
   ClipboardList, 
   CheckCircle2, 
@@ -45,16 +45,16 @@ const qrCodeUrl = computed(() => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`http://localhost:5173/presensi?checkin=${c}-p${m}`)}`
 })
 
-// Class Roster / Students List for Dosen View
+// Class Roster / Students List for Dosen View (Default empty status per meeting unless saved)
 const classRoster = ref([
-  { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', status: 'Absen' },
-  { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', status: 'Absen' },
-  { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', status: 'Hadir' },
-  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', status: 'Hadir' },
-  { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', status: 'Hadir' },
-  { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', status: 'Hadir' },
-  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', status: 'Hadir' },
-  { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', status: 'Izin' },
+  { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', status: '' },
+  { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', status: '' },
+  { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', status: '' },
+  { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', status: '' },
+  { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', status: '' },
+  { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', status: '' },
+  { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', status: '' },
+  { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', status: '' },
 ])
 
 // Student Check-In Form State
@@ -65,15 +65,43 @@ const studentStatus = ref('Hadir')
 // Registered Attendances Log from Backend
 const attendances = ref([])
 
+const loadMeetingAttendance = () => {
+  const cId = selectedCourse.value
+  const mNo = parseInt(selectedMeeting.value)
+
+  const savedForMeeting = attendances.value.filter(
+    a => a.course_id === cId && parseInt(a.meeting_no) === mNo
+  )
+
+  classRoster.value.forEach(student => {
+    const rec = savedForMeeting.find(a => a.student_nim === student.nim)
+    if (rec) {
+      student.status = rec.status
+    } else {
+      student.status = ''
+    }
+  })
+}
+
+watch([selectedCourse, selectedMeeting], () => {
+  loadMeetingAttendance()
+})
+
 const fetchAttendance = async () => {
   try {
     const res = await fetch('/api/attendance')
     if (res.ok) {
       attendances.value = await res.json()
+      localStorage.setItem('elearning_attendances', JSON.stringify(attendances.value))
     }
   } catch (err) {
     console.warn('Fetch attendance error:', err)
+    const local = localStorage.getItem('elearning_attendances')
+    if (local) {
+      try { attendances.value = JSON.parse(local) } catch {}
+    }
   }
+  loadMeetingAttendance()
 }
 
 onMounted(() => {
@@ -97,8 +125,9 @@ const stats = computed(() => {
   const absen = classRoster.value.filter(s => s.status === 'Absen').length
   const izin = classRoster.value.filter(s => s.status === 'Izin').length
   const sakit = classRoster.value.filter(s => s.status === 'Sakit').length
+  const belum = classRoster.value.filter(s => !s.status).length
   const percentage = total > 0 ? ((hadir / total) * 100).toFixed(1) : 0
-  return { total, hadir, absen, izin, sakit, percentage }
+  return { total, hadir, absen, izin, sakit, belum, percentage }
 })
 
 // Quick Batch Action: Set All Students Status
@@ -118,21 +147,12 @@ const setStudentStatus = (student, newStatus) => {
 const cancelOrResetChanges = async () => {
   const confirmed = await showConfirm(
     'Batalkan Perubahan?',
-    'Apakah Anda yakin ingin membatalkan rekap presensi?',
+    'Apakah Anda yakin ingin membatalkan perubahan rekap presensi pertemuan ini?',
     'Ya, Batalkan'
   )
   if (confirmed) {
-    classRoster.value = [
-      { id: 'std-1', name: 'LINTANG ANGEL STEFANI', nim: '221112019', status: 'Absen' },
-      { id: 'std-2', name: 'IGNATION SENSEKO MANGGUR', nim: '221112020', status: 'Absen' },
-      { id: 'std-3', name: 'FAIZ IJLAL ARAYYAN', nim: '231112028', status: 'Hadir' },
-      { id: 'std-4', name: 'ALDINUS NDRURU', nim: '241112001', status: 'Hadir' },
-      { id: 'std-5', name: 'OVAROLDUS SUPRATMAN', nim: '241112002', status: 'Hadir' },
-      { id: 'std-6', name: 'RADEN DHAFA ADHITYA SOSIAWAN', nim: '241112003', status: 'Hadir' },
-      { id: 'std-7', name: 'AHMAD FAUZI', nim: '20260801001', status: 'Hadir' },
-      { id: 'std-8', name: 'SITI NURHALIZA', nim: '20260801002', status: 'Izin' }
-    ]
-    showSuccess('Dibatalkan! 🔄', 'Perubahan presensi berhasil dibatalkan dan dikembalikan ke awal.')
+    loadMeetingAttendance()
+    showSuccess('Dibatalkan! 🔄', 'Perubahan presensi berhasil dibatalkan dan dikembalikan.')
   }
 }
 
@@ -196,21 +216,46 @@ const simulateQrScan = () => {
 // Batch Save Attendance to Backend
 const saveBatchAttendance = async () => {
   try {
-    const promises = classRoster.value.map(s => 
-      fetch('/api/attendance', {
+    const cId = selectedCourse.value
+    const mNo = parseInt(selectedMeeting.value)
+
+    const promises = classRoster.value.map(s => {
+      if (!s.status) return Promise.resolve()
+      return fetch('/api/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          course_id: selectedCourse.value,
-          meeting_no: parseInt(selectedMeeting.value),
+          course_id: cId,
+          meeting_no: mNo,
           student_nim: s.nim,
           student_name: s.name,
           status: s.status
         })
       })
-    )
+    })
     await Promise.all(promises)
-    showSuccess('Rekap Kehadiran Disimpan! 💾', `Presensi kelas Pertemuan ${selectedMeeting.value} untuk ${stats.value.total} mahasiswa berhasil disimpan ke server.`)
+
+    classRoster.value.forEach(s => {
+      if (!s.status) return
+      const existingIdx = attendances.value.findIndex(a => a.course_id === cId && parseInt(a.meeting_no) === mNo && a.student_nim === s.nim)
+      if (existingIdx !== -1) {
+        attendances.value[existingIdx].status = s.status
+      } else {
+        attendances.value.push({
+          id: 'att-' + Date.now() + '-' + s.nim,
+          course_id: cId,
+          meeting_no: mNo,
+          student_nim: s.nim,
+          student_name: s.name,
+          status: s.status,
+          check_in_time: new Date().toISOString()
+        })
+      }
+    })
+    localStorage.setItem('elearning_attendances', JSON.stringify(attendances.value))
+
+    const filledCount = classRoster.value.filter(s => s.status).length
+    showSuccess('Rekap Kehadiran Disimpan! 💾', `Presensi kelas Pertemuan ${selectedMeeting.value} untuk ${filledCount} mahasiswa berhasil disimpan ke server.`)
     fetchAttendance()
   } catch (err) {
     showError('Gagal Menyimpan!', 'Terjadi kesalahan saat menyimpan rekap presensi.')
@@ -343,7 +388,7 @@ const openSelfScanModal = async () => {
     title: '📱 Scan QR / Input Kode Token Presensi',
     html: `
       <div style="text-align: left; font-size: 0.88rem; color: #475569; margin-bottom: 0.75rem; font-weight: 600;">
-        Masukkan 4-digit kode token presensi yang ditampilkan Pak Rio di layar proyektor kelas:
+        Masukkan 4-digit kode token presensi yang ditampilkan Dosen di layar proyektor kelas:
       </div>
       <input id="swal-token" class="swal2-input" placeholder="Contoh: 2026 / 8890" style="margin: 0.5rem 0; width: 100%; box-sizing: border-box; text-align: center; font-size: 1.5rem; letter-spacing: 4px; font-weight: 800;" maxlength="6">
     `,
@@ -433,7 +478,7 @@ const openIzinModal = async () => {
       })
 
       if (res.ok) {
-        showSuccess('Pengajuan Dikirim! 📨', `Surat Keterangan ${formValues.st} Pertemuan ${formValues.mNo} telah dikirim ke Dosen Pak Rio Widyatmoko.`)
+        showSuccess('Pengajuan Dikirim! 📨', `Surat Keterangan ${formValues.st} Pertemuan ${formValues.mNo} telah dikirim ke Dosen Pengampu.`)
         fetchAttendance()
       }
     } catch (err) {
@@ -658,6 +703,10 @@ const openIzinModal = async () => {
             <Activity class="pill-icon text-amber" />
             <span>Sakit: <strong>{{ stats.sakit }}</strong></span>
           </div>
+          <div v-if="stats.belum > 0" class="stat-pill stat-belum">
+            <Info class="pill-icon text-slate" />
+            <span>Belum Diisi: <strong>{{ stats.belum }}</strong></span>
+          </div>
         </div>
       </div>
 
@@ -712,10 +761,11 @@ const openIzinModal = async () => {
                       'badge-hadir': student.status === 'Hadir',
                       'badge-absen': student.status === 'Absen',
                       'badge-izin': student.status === 'Izin',
-                      'badge-sakit': student.status === 'Sakit'
+                      'badge-sakit': student.status === 'Sakit',
+                      'badge-empty': !student.status
                     }"
                   >
-                    <span>{{ student.status }}</span>
+                    <span>{{ student.status || 'Belum Diisi' }}</span>
                   </span>
                 </td>
                 <td class="col-actions">
@@ -1264,10 +1314,14 @@ const openIzinModal = async () => {
   font-weight: 700;
 }
 
+.stat-sakit { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.stat-belum { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
 .badge-hadir { background: #dcfce7; color: #15803d; }
 .badge-absen { background: #fee2e2; color: #dc2626; }
 .badge-izin { background: #e0f2fe; color: #0369a1; }
 .badge-sakit { background: #fef3c7; color: #b45309; }
+.badge-empty { background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; }
 
 .col-actions {
   min-width: 260px;

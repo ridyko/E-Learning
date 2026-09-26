@@ -66,7 +66,7 @@ const handleQuizFinish = () => {
       <div class="banner-info">
         <ShieldCheck class="banner-icon text-gold" />
         <div>
-          <h4>Mode Dosen Pengampu — Pak Rio Widyatmoko</h4>
+          <h4>Mode Dosen Pengampu</h4>
           <p>Untuk menginput soal kuis baru atau melihat rekap nilai mahasiswa, silakan masuk ke menu Bank Soal & Nilai Kuis.</p>
         </div>
       </div>
@@ -84,7 +84,7 @@ const handleQuizFinish = () => {
         </div>
         <div>
           <h4 style="margin: 0 0 0.2rem 0; font-weight: 800; font-size: 1.15rem; color: #d97706;">Live Quiz Interaktif Real-Time 🔥</h4>
-          <p style="margin: 0; font-size: 0.9rem; color: #475569;">Punya PIN 6-digit kuis dari Pak Rio Widyatmoko? Gabung sesi kuis live secara langsung!</p>
+          <p style="margin: 0; font-size: 0.9rem; color: #475569;">Punya PIN 6-digit kuis dari Dosen Pengampu? Gabung sesi kuis live secara langsung!</p>
         </div>
       </div>
       <router-link to="/live-quiz" class="btn" style="background: #d97706; color: white; border: none; padding: 0.75rem 1.4rem; border-radius: 0.85rem; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);">

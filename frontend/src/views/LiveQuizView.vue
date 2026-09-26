@@ -72,7 +72,7 @@ const checkUser = () => {
         inputStudentName.value = currentUser.value.name || 'Mahasiswa'
         inputStudentNim.value = currentUser.value.username || ''
       } else if (currentUser.value.role === 'dosen') {
-        inputStudentName.value = currentUser.value.name || 'Pak Rio Widyatmoko'
+        inputStudentName.value = currentUser.value.name || 'Dosen Pengampu'
         inputStudentNim.value = currentUser.value.username || '21099001'
       }
     } catch {
@@ -204,7 +204,7 @@ const handleDosenCreateLive = async () => {
                 question: q.question,
                 options: q.options,
                 correct_answer: parseInt(q.correct_answer),
-                explanation: q.explanation || 'Pembahasan kunci jawaban oleh Pak Rio Widyatmoko.'
+                explanation: q.explanation || 'Pembahasan kunci jawaban oleh Dosen Pengampu.'
               }
             })
           })
@@ -706,7 +706,7 @@ const exitQuiz = async () => {
             <Zap class="logo-icon text-white" />
           </div>
           <h2>Gabung Live Quiz Interaktif (Mahasiswa)</h2>
-          <p>Masukkan 6 digit PIN yang ditampilkan Dosen (Pak Rio Widyatmoko) pada layar proyektor.</p>
+          <p>Masukkan 6 digit PIN yang ditampilkan Dosen pada layar proyektor.</p>
         </div>
 
         <form @submit.prevent="handleJoinQuiz" class="join-form">
@@ -816,7 +816,7 @@ const exitQuiz = async () => {
         <div v-else class="student-waiting-box glass-card-light">
           <Sparkles class="sparkle-icon text-gold animate-bounce" />
           <h3 class="text-dark">Anda Sudah Masuk ke Lobby!</h3>
-          <p class="text-muted">Bersiaplah! Sesi akan segera dimulai saat Dosen Pengampu (Pak Rio Widyatmoko) menekan tombol "Mulai Kuis".</p>
+          <p class="text-muted">Bersiaplah! Sesi akan segera dimulai saat Dosen Pengampu menekan tombol "Mulai Kuis".</p>
         </div>
       </div>
 
@@ -1010,7 +1010,7 @@ const exitQuiz = async () => {
             <Trophy class="trophy-icon text-white animate-bounce" />
           </div>
           <h2 class="text-dark">Papan Peringkat Sementara</h2>
-          <p class="text-muted">Top Skor Mahasiswa — Sesi Live Quiz Pak Rio Widyatmoko</p>
+          <p class="text-muted">Top Skor Mahasiswa — Sesi Live Quiz</p>
         </div>
 
         <!-- Leaderboard List -->
@@ -1099,7 +1099,7 @@ const exitQuiz = async () => {
             <Sparkles class="icon-lg text-white animate-bounce" />
           </div>
           <h2 class="text-dark">SELEBRASI JUARA KUIS LIVE</h2>
-          <p class="text-muted">Selamat kepada para pemenang Sesi Live Quiz Real-Time Pak Rio Widyatmoko!</p>
+          <p class="text-muted">Selamat kepada para pemenang Sesi Live Quiz Real-Time!</p>
         </div>
 
         <!-- 3D Podium Display -->

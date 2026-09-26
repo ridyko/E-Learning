@@ -44,7 +44,7 @@ const createAnnouncement = async () => {
     })
 
     if (res.ok) {
-      showSuccess('Pengumuman Diterbitkan! 📢', 'Pengumuman baru berhasil diterbitkan oleh Pak Rio!')
+      showSuccess('Pengumuman Diterbitkan! 📢', 'Pengumuman baru berhasil diterbitkan!')
       newAnnTitle.value = ''
       newAnnContent.value = ''
       fetchAnnouncements()

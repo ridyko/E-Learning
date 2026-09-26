@@ -177,7 +177,7 @@ const resetCourses = async () => {
         <BookOpen class="header-icon text-gold" />
         <div>
           <h2>Kelola, Edit & Tambah Mata Kuliah</h2>
-          <p class="subtitle">Tambahkan mata kuliah baru atau edit informasi mata kuliah (Kode, SKS, Jadwal, Ruang, & Deskripsi) yang diampu Pak Rio.</p>
+          <p class="subtitle">Tambahkan mata kuliah baru atau edit informasi mata kuliah (Kode, SKS, Jadwal, Ruang, & Deskripsi) yang diampu Dosen.</p>
         </div>
       </div>
     </div>

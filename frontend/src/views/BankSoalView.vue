@@ -246,7 +246,7 @@ const addQuizQuestion = async () => {
           question: newQQuestion.value,
           options: newQType.value === 'mc' ? [newQOpt0.value, newQOpt1.value, newQOpt2.value, newQOpt3.value] : [],
           correct_answer: newQType.value === 'mc' ? parseInt(newQCorrect.value) : 0,
-          explanation: newQExplanation.value || 'Pembahasan materi oleh Pak Rio Widyatmoko.'
+          explanation: newQExplanation.value || 'Pembahasan materi oleh Dosen Pengampu.'
         }
       })
     })

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,11 +11,13 @@ import (
 	"sync"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"elearning-backend/models"
 )
 
 type DataStore struct {
 	mu              sync.RWMutex
+	SQLDB           *sql.DB
 	LandingSettings models.LandingSettings
 	Users           []models.User
 	Profile         models.Profile
@@ -235,13 +238,75 @@ func InitStore() {
 		},
 	}
 
-	if DB.loadFromDisk() {
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		paths := []string{
+			"data/db_config.json",
+			"/home/questkom/backend_elearning/data/db_config.json",
+			"backend/data/db_config.json",
+		}
+		for _, p := range paths {
+			if cfgData, err := os.ReadFile(p); err == nil {
+				var cfg struct {
+					MySQLDSN string `json:"mysql_dsn"`
+				}
+				if err := json.Unmarshal(cfgData, &cfg); err == nil && cfg.MySQLDSN != "" {
+					dsn = cfg.MySQLDSN
+					fmt.Printf("[DataStore] Loaded MySQL DSN from config file: %s\n", p)
+					break
+				}
+			}
+		}
+	}
+
+	if dsn != "" {
+		fmt.Printf("[DataStore] Attempting MySQL connection with DSN: %s...\n", dsn)
+		db, err := sql.Open("mysql", dsn)
+		if err != nil {
+			fmt.Printf("[DataStore] MySQL open error: %v (falling back to JSON storage)\n", err)
+		} else {
+			if pingErr := db.Ping(); pingErr != nil {
+				fmt.Printf("[DataStore] MySQL ping error: %v (falling back to JSON storage)\n", pingErr)
+			} else {
+				DB.SQLDB = db
+				fmt.Println("[DataStore] Connected to MySQL Database successfully! 🐬")
+			}
+		}
+	}
+
+	if DB.SQLDB != nil {
+		DB.loadFromMySQL()
+		fmt.Println("[DataStore] Loaded state from cPanel MySQL Database (questkom_elearning)")
+	} else if DB.loadFromDisk() {
 		fmt.Println("[DataStore] Loaded persisted database state from data/store.json")
 	} else {
 		DB.mu.Lock()
 		DB.saveToDiskLocked()
 		DB.mu.Unlock()
 		fmt.Println("[DataStore] Initialized default database state and saved to data/store.json")
+	}
+}
+
+func (ds *DataStore) loadFromMySQL() {
+	if ds.SQLDB == nil {
+		return
+	}
+	// Load users from MySQL
+	rows, err := ds.SQLDB.Query("SELECT id, username, name, role, password, email, prodi FROM users")
+	if err == nil {
+		var loadedUsers []models.User
+		for rows.Next() {
+			var u models.User
+			var email, prodi sql.NullString
+			_ = rows.Scan(&u.ID, &u.Username, &u.Name, &u.Role, &u.Password, &email, &prodi)
+			u.Email = email.String
+			u.Prodi = prodi.String
+			loadedUsers = append(loadedUsers, u)
+		}
+		rows.Close()
+		if len(loadedUsers) > 0 {
+			ds.Users = loadedUsers
+		}
 	}
 }
 
@@ -1023,6 +1088,16 @@ func (ds *DataStore) GetAssignments() []models.Assignment {
 func (ds *DataStore) AddAttendance(att models.Attendance) models.Attendance {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
+
+	for i, existing := range ds.Attendances {
+		if existing.CourseID == att.CourseID && existing.MeetingNo == att.MeetingNo && existing.StudentNIM == att.StudentNIM {
+			ds.Attendances[i].Status = att.Status
+			ds.Attendances[i].CheckInTime = time.Now()
+			ds.saveToDiskLocked()
+			return ds.Attendances[i]
+		}
+	}
+
 	att.ID = "att-" + time.Now().Format("20060102150405")
 	att.CheckInTime = time.Now()
 	ds.Attendances = append([]models.Attendance{att}, ds.Attendances...)

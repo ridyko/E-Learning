@@ -88,12 +88,12 @@ defineProps({
       <!-- Quick Action CTA -->
       <div class="action-section">
         <a 
-          :href="'https://wa.me/' + profile.phone?.replace(/[^0-9]/g, '') + '?text=Halo%20Pak%20Rio%20Widyatmoko,%20saya%20mahasiswa%20ITB%20Swadharma%20...'" 
+          :href="'https://wa.me/' + profile.phone?.replace(/[^0-9]/g, '') + '?text=Halo%20Dosen%20ITB%20Swadharma,%20saya%20mahasiswa%20...'" 
           target="_blank" 
           class="btn btn-gold wa-btn"
         >
           <MessageSquare class="btn-icon-sm" />
-          <span>Chat WhatsApp Pak Rio</span>
+          <span>Chat WhatsApp Dosen</span>
           <ExternalLink class="btn-icon-xs" />
         </a>
       </div>
