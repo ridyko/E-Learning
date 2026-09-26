@@ -131,6 +131,46 @@ const stats = computed(() => {
 })
 
 // Add New Student Form Popup (SweetAlert2)
+const fetchStudents = async () => {
+  try {
+    const res = await fetch('/api/students')
+    if (res.ok) {
+      const data = await res.json()
+      data.forEach(st => {
+        const existing = students.value.find(s => s.nim === st.username)
+        if (existing) {
+          if (st.name) existing.name = st.name.toUpperCase()
+          if (st.prodi) existing.prodi = st.prodi
+          if (st.email) existing.email = st.email
+          if (st.phone) existing.phone = st.phone
+        } else {
+          students.value.push({
+            id: st.id || 'std-' + st.username,
+            nim: st.username,
+            name: (st.name || st.username).toUpperCase(),
+            prodi: st.prodi || 'Teknik Informatika (S1)',
+            status: 'Aktif',
+            email: st.email || `${st.username.toLowerCase()}@student.swadharma.ac.id`,
+            phone: st.phone || '6281234567890',
+            ipk: '3.70'
+          })
+        }
+      })
+      localStorage.setItem('elearning_students', JSON.stringify(students.value))
+    }
+  } catch (err) {
+    console.warn('Fetch students error:', err)
+    const local = localStorage.getItem('elearning_students')
+    if (local) {
+      try { students.value = JSON.parse(local) } catch {}
+    }
+  }
+}
+
+onMounted(() => {
+  fetchStudents()
+})
+
 const openAddStudentModal = async () => {
   const { value: formValues } = await Swal.fire({
     title: '🎓 Tambah Data Mahasiswa Baru',

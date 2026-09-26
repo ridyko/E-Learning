@@ -90,6 +90,29 @@ watch([selectedCourse, selectedMeeting], () => {
 })
 
 const fetchStudents = async () => {
+  const local = localStorage.getItem('elearning_students')
+  if (local) {
+    try {
+      const parsed = JSON.parse(local)
+      parsed.forEach(st => {
+        const targetNim = st.nim || st.username
+        const existing = classRoster.value.find(r => r.nim === targetNim)
+        if (existing) {
+          if (st.name) existing.name = st.name.toUpperCase()
+          if (st.prodi) existing.prodi = st.prodi
+        } else {
+          classRoster.value.push({
+            id: st.id || 'std-' + targetNim,
+            name: (st.name || targetNim).toUpperCase(),
+            nim: targetNim,
+            prodi: st.prodi || 'Teknik Informatika (S1)',
+            status: ''
+          })
+        }
+      })
+    } catch {}
+  }
+
   try {
     const res = await fetch('/api/students')
     if (res.ok) {
@@ -97,6 +120,7 @@ const fetchStudents = async () => {
       data.forEach(st => {
         const existing = classRoster.value.find(r => r.nim === st.username)
         if (existing) {
+          if (st.name) existing.name = st.name.toUpperCase()
           if (st.prodi) existing.prodi = st.prodi
         } else {
           classRoster.value.push({
