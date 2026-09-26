@@ -61,12 +61,13 @@ const toggleCourseStatus = async (c) => {
     })
 
     if (res.ok) {
+      c.status = newStatus
       showSuccess(
         `Status Diubah! ${newStatus === 'Aktif' ? '🟢' : '🔴'}`,
         `Mata kuliah '${c.name}' sekarang berstatus ${newStatus}.`
       )
       window.dispatchEvent(new Event('course-changed'))
-      fetchCourses()
+      await fetchCourses()
     } else {
       showError('Gagal!', 'Gagal memperbarui status mata kuliah!')
     }
@@ -104,7 +105,7 @@ const createCourse = async () => {
       newCourseDescription.value = ''
       newCourseStatus.value = 'Aktif'
       window.dispatchEvent(new Event('course-changed'))
-      fetchCourses()
+      await fetchCourses()
     }
   } catch (err) {
     showError('Gagal!', 'Gagal menambahkan mata kuliah baru!')
@@ -143,10 +144,14 @@ const updateCourse = async () => {
     })
 
     if (res.ok) {
+      const target = courses.value.find(item => item.id === editCourseForm.value.id)
+      if (target) {
+        Object.assign(target, editCourseForm.value)
+      }
       showSuccess('Mata Kuliah Diperbarui! ✏️', `Data mata kuliah '${editCourseForm.value.name}' telah berhasil diubah.`)
       showEditCourseModal.value = false
       window.dispatchEvent(new Event('course-changed'))
-      fetchCourses()
+      await fetchCourses()
     } else {
       showError('Gagal!', 'Gagal memperbarui data mata kuliah!')
     }
